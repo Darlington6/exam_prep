@@ -5,7 +5,11 @@
 
 ## African Context
 
-[Explain what problem this solves and why it matters in an African context]
+Many students across Africa prepare for important national examinations at the end of secondary school and for university entrance exams. These exams are highly competitive and play a major role in determining students’ academic and career opportunities.
+
+However, access to structured and interactive revision materials remains limited in many areas. Students often depend on printed past questions, textbooks, or informal study groups. In some communities, access to quality digital learning platforms is still developing. As a result, many learners do not receive instant feedback on their performance and cannot easily track their progress over time.
+
+This project aims to provide a simple, affordable, and accessible online platform where students can practice exam questions, receive immediate results, and monitor their improvement. By supporting digital learning and self-assessment, the platform contributes to improving exam preparation and educational outcomes across African countries.
 
 ## Team Members
 
@@ -26,23 +30,27 @@ Secondary school students
 
 University students
 
-Candidates preparing for national exams (WAEC, NECO, JAMB, etc.)
-
 People preparing for professional certification exams
 
 Schools and training centers
 
 ### Core Features
-- Feature 1: [Description]
-- Feature 2: [Description]
-- Feature 3: [Description]
+User Registration and Login: Users can create accounts and securely log in to access exams.
 
+Practice Exams: Students can choose an exam category and answer multiple-choice questions.
+Timer: Practice in a given time and test yourself what are you able to complete in that specific time.
+
+Instant Results and Feedback: After submitting answers, users immediately see their score and correct answers.
+
+Performance Tracking: Users can view their previous attempts and monitor their improvement.
+
+Admin Dashboard: Admins can manage exams, questions, and monitor system activity.
 ## Technology Stack
 
 - **Backend**: Node.js/Express
-- **Frontend**: React with Typescript or vanilla JavaScript]
+- **Frontend**: React with Typescript 
 - **Database**: MongoDB
-- **Other**: 
+- **Other**: Github actions,  Docker
 
 ## Getting Started
 
