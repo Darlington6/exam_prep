@@ -9,16 +9,28 @@
 
 ## Team Members
 
-- [Name] - [Role] - [Student ID]
+- UWIMANA Chantal  - [Role] - [Student ID]
 - [Name] - [Role] - [Student ID]
 - [Name] - [Role] - [Student ID]
 
 ## Project Overview
 
-[2-3 paragraph description of what this application does]
+Exam Prep is a web-based application that allows students to practice exam questions online. Users can register, log in, choose an exam category, attempt multiple-choice questions, and receive instant results.
+
+The system automatically calculates scores and shows correct answers with explanations. Students can also view their past attempts and monitor their improvement over time.
+
+The platform also includes an admin section where administrators can create exams, add questions, and manage content easily. The system is designed to be scalable, secure, and easy to maintain using modern development and DevOps practices.
 
 ### Target Users
-[Who will use this application?]
+Secondary school students
+
+University students
+
+Candidates preparing for national exams (WAEC, NECO, JAMB, etc.)
+
+People preparing for professional certification exams
+
+Schools and training centers
 
 ### Core Features
 - Feature 1: [Description]
@@ -27,10 +39,10 @@
 
 ## Technology Stack
 
-- **Backend**: [e.g., Python/Django, Node.js/Express]
-- **Frontend**: [e.g., React, Vue, or vanilla JavaScript]
-- **Database**: [e.g., PostgreSQL, MongoDB]
-- **Other**: [Any other key technologies]
+- **Backend**: Node.js/Express
+- **Frontend**: React with Typescript or vanilla JavaScript]
+- **Database**: MongoDB
+- **Other**: 
 
 ## Getting Started
 
@@ -67,4 +79,4 @@
 
 ## License
 
-[e.g., MIT License]
+ MIT License
