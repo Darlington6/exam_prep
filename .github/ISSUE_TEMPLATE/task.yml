@@ -1,0 +1,35 @@
+name: "🔴 Task"
+description: "A technical task not directly tied to a user story"
+title: "[TASK] <short title>"
+labels: ["type: task"]
+body:
+- type: textarea
+   id: description
+   attributes:
+      label: Task Description
+      description: "What needs to be done and why"
+   validations:
+      required: true
+- type: textarea
+   id: subtasks
+   attributes:
+      label: Sub-tasks
+      value: |
+         - [ ] Sub-task 1
+         - [ ] Sub-task 2
+- type: dropdown
+   id: category
+   attributes:
+      label: Category
+      options:
+         - "Infrastructure"
+         - "CI/CD"
+         - "Testing"
+         - "Documentation"
+         - "Refactoring"
+         - "Security"
+         - "Performance"
+         - "Monitoring"
+         - "Database"
+   validations:
+      required: true
