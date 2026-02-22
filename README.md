@@ -12,9 +12,10 @@ This project aims to provide a simple, affordable, and accessible online platfor
 
 ## Team Members
 
-- UWIMANA Chantal - Full Stack Developer - [Student ID]
-- [Name] - [Role] - [Student ID]
-- [Name] - [Role] - [Student ID]
+- UWIMANA Chantal - Frontend, DevOps - [Student ID]
+- Desmond Tunyiko -  Backend, DevOps- 
+- Nmesoma Solomon Peter - Backend, DevOps - [Student ID]
+-Sharangabo Edouard - Frontend, DevOps 
 
 ## Project Overview
 
@@ -65,7 +66,7 @@ Schools and training centers
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/exam_prep.git
+git clone https://github.com/Darlington6/exam_prep.git
 cd exam_prep
 ```
 
@@ -101,8 +102,7 @@ cp .env.example .env
 
 Edit the `.env` file:
 ```
-VITE_API_URL=http://localhost:5001
-```
+<!--  -->
 
 3. Run the application
 
@@ -178,8 +178,6 @@ exam_prep/
 
 ## Links
 
-- [Project Board](https://github.com/yourusername/exam_prep/projects)
-- [Documentation](https://github.com/yourusername/exam_prep/wiki)
 
 ## License
 
