@@ -1,0 +1,46 @@
+name: "User Story"
+description: "A feature described from the user's perspective"
+title: "[STORY] "
+labels: ["type: user-story"]
+body:
+- type: textarea
+id: story
+attributes:
+label: User Story
+description: "As a [role], I want [capability] so that [benefit]"
+placeholder: "As a fleet manager, I want to view real-time vehicle locations
+so that I can optimize routes."
+validations:
+required: true
+- type: textarea
+id: acceptance-criteria
+attributes:
+label: Acceptance Criteria
+description: "Define the conditions that must be met"
+value: |
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+validations:
+required: true
+- type: textarea
+id: technical-notes
+attributes:
+label: Technical Notes
+description: "Any implementation considerations"
+- type: dropdown
+id: priority
+attributes:
+label: Priority
+options:
+- "🔴 Critical"
+- "🔴 High"
+- "🔴 Medium"
+- "🔴 Low"
+validations:
+required: true
+- type: input
+id: story-points
+attributes:
+label: Story Points
+description: "Estimated complexity (1, 2, 3, 5, 8, 13)"
