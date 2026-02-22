@@ -1,46 +1,50 @@
 name: "User Story"
 description: "A feature described from the user's perspective"
-title: "[STORY] "
-labels: ["type: user-story"]
+title: "[STORY] Auth: Register / Login / Logout"
+labels: ["type: user-story", "backend", "frontend", "auth"]
 body:
 - type: textarea
-id: story
-attributes:
-label: User Story
-description: "As a [role], I want [capability] so that [benefit]"
-placeholder: "As a fleet manager, I want to view real-time vehicle locations
-so that I can optimize routes."
-validations:
-required: true
+   id: story
+   attributes:
+      label: User Story
+      description: "As a student, I want to register and log in so that I can access practice exams and save progress."
+   validations:
+      required: true
 - type: textarea
-id: acceptance-criteria
-attributes:
-label: Acceptance Criteria
-description: "Define the conditions that must be met"
-value: |
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-validations:
-required: true
+   id: acceptance-criteria
+   attributes:
+      label: Acceptance Criteria
+      description: "Define the conditions that must be met"
+      value: |
+         - [ ] Registration endpoint creates a user and returns a JWT.
+         - [ ] Login endpoint returns a JWT for valid credentials.
+         - [ ] Frontend stores JWT and sends it in the Authorization header for protected requests.
+         - [ ] Logout clears stored token on the frontend.
+         - [ ] Roles `user` and `admin` are assignable and enforced on protected routes.
+   validations:
+      required: true
 - type: textarea
-id: technical-notes
-attributes:
-label: Technical Notes
-description: "Any implementation considerations"
+   id: technical-notes
+   attributes:
+      label: Technical Notes
+      description: "Any implementation considerations"
+      value: |
+         - Add `role` field to the `User` model with enum: ["user","admin"].
+         - Use `bcryptjs` to hash passwords and `jsonwebtoken` for JWTs.
+         - Implement `auth` middleware to verify tokens and attach `req.user`.
+         - Implement `admin` middleware to protect admin-only endpoints.
+         - Add integration tests for register/login and role enforcement; include API docs update.
 - type: dropdown
-id: priority
-attributes:
-label: Priority
-options:
-- "🔴 Critical"
-- "🔴 High"
-- "🔴 Medium"
-- "🔴 Low"
-validations:
-required: true
+   id: priority
+   attributes:
+      label: Priority
+      options:
+      - "🔴 High"
+   validations:
+      required: true
 - type: input
-id: story-points
-attributes:
-label: Story Points
-description: "Estimated complexity (1, 2, 3, 5, 8, 13)"
+   id: story-points
+   attributes:
+      label: Story Points
+      description: "Estimated complexity (1, 2, 3, 5, 8, 13)"
+      value: "3"
