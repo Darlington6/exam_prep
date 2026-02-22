@@ -23,7 +23,9 @@ export function Login() {
       const ax = err as { code?: string; response?: { data?: { message?: string } } } | null;
       let msg = 'Login failed.';
       if (ax?.code === 'ERR_NETWORK' || !ax?.response) {
-        msg = "Can't reach the backend. In exam-prep/backend run: npm run dev (server runs on port 5001).";
+        msg = ax?.code === 'ECONNABORTED'
+          ? 'Request timed out. Check that the backend is running.'
+          : "Can't reach the backend. In exam-prep/backend run: npm run dev (server runs on port 5001).";
       } else if (ax.response?.data?.message) {
         msg = ax.response.data.message;
       }

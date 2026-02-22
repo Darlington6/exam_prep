@@ -6,6 +6,7 @@ const baseURL = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001'}/api`
 export const api = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {

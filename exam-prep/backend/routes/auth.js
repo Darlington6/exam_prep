@@ -86,15 +86,23 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
+    email = String(email).toLowerCase().trim();
+    password = String(password);
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
+    if (!user || !user.password) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
-    const valid = await user.comparePassword(password);
+    let valid = false;
+    try {
+      valid = await user.comparePassword(password);
+    } catch (e) {
+      console.error('Login comparePassword error:', e.message);
+      return res.status(500).json({ message: 'Login failed.' });
+    }
     if (!valid) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -105,7 +113,10 @@ router.post('/login', async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
-    if (!res.headersSent) res.status(500).json({ message: 'Login failed.' });
+    if (!res.headersSent) {
+      console.error('Login error:', err.message);
+      res.status(500).json({ message: err.message || 'Login failed.' });
+    }
   }
 });
 
