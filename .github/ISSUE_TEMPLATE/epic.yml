@@ -1,0 +1,32 @@
+name: "Epic"
+description: "A large body of work broken into user stories"
+title: "[EPIC] %short title%"
+labels: ["type: epic"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Epic Summary"
+      description: "High-level description of this body of work"
+    validations:
+      required: true
+
+  - type: textarea
+    id: stories
+    attributes:
+      label: "Related User Stories"
+      description: "List child issues using #issue-number"
+      value: |
+        - [ ] #
+        - [ ] #
+
+  - type: textarea
+    id: success-metrics
+    attributes:
+      label: "Success Metrics"
+      description: "How do we know this epic is complete?"
+
+  - type: input
+    id: target-milestone
+    attributes:
+      label: "Target Milestone"
