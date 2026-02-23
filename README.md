@@ -72,7 +72,7 @@ cd exam_prep
 
 2. Set up the Backend
 ```bash
-cd exam-prep/backend
+cd backend
 npm install
 ```
 
@@ -115,13 +115,13 @@ In separate terminal windows:
 
 Backend:
 ```bash
-cd exam-prep/backend
+cd backend
 npm run dev
 ```
 
 Frontend:
 ```bash
-cd exam-prep/frontend
+cd frontend
 npm run dev
 ```
 
@@ -138,41 +138,40 @@ npm run dev
 exam_prep/
 ├── LICENSE
 ├── README.md
-└── exam-prep/
-    ├── backend/                    # Node.js/Express backend
-    │   ├── server.js              # Entry point, Express app setup
-    │   ├── package.json           # Backend dependencies
-    │   ├── .env.example           # Environment variables template
-    │   ├── middleware/
-    │   │   └── auth.js            # Authentication middleware
-    │   ├── models/
-    │   │   └── User.js            # Mongoose User schema
-    │   └── routes/
-    │       └── auth.js            # Authentication routes
-    │
-    └── frontend/                   # React/TypeScript frontend
-        ├── index.html             # HTML entry point
-        ├── package.json           # Frontend dependencies
-        ├── vite.config.ts         # Vite configuration
-        ├── tsconfig.json          # TypeScript configuration
-        ├── eslint.config.js       # ESLint configuration
-        ├── .env.example           # Environment variables template
-        ├── public/                # Static assets
-        └── src/
-            ├── main.tsx           # React entry point
-            ├── App.tsx            # Main App component with routing
-            ├── App.css            # Global styles
-            ├── index.css          # Base styles
-            ├── api/
-            │   └── client.ts      # Axios client with interceptors
-            ├── components/
-            │   └── ProtectedRoute.tsx  # Route protection
-            ├── contexts/
-            │   └── AuthContext.tsx     # Authentication context
-            └── pages/
-                ├── Home.tsx       # Landing page
-                ├── Login.tsx      # Login page
-                └── Register.tsx   # Registration page
+├── backend/                    # Node.js/Express backend
+│   ├── server.js              # Entry point, Express app setup
+│   ├── package.json           # Backend dependencies
+│   ├── .env.example           # Environment variables template
+│   ├── middleware/
+│   │   └── auth.js            # Authentication middleware
+│   ├── models/
+│   │   └── User.js            # Mongoose User schema
+│   └── routes/
+│       └── auth.js            # Authentication routes
+│
+└── frontend/                   # React/TypeScript frontend
+    ├── index.html             # HTML entry point
+    ├── package.json           # Frontend dependencies
+    ├── vite.config.ts         # Vite configuration
+    ├── tsconfig.json          # TypeScript configuration
+    ├── eslint.config.js       # ESLint configuration
+    ├── .env.example           # Environment variables template
+    ├── public/                # Static assets
+    └── src/
+        ├── main.tsx           # React entry point
+        ├── App.tsx            # Main App component with routing
+        ├── App.css            # Global styles
+        ├── index.css          # Base styles
+        ├── api/
+        │   └── client.ts      # Axios client with interceptors
+        ├── components/
+        │   └── ProtectedRoute.tsx  # Route protection
+        ├── contexts/
+        │   └── AuthContext.tsx     # Authentication context
+        └── pages/
+            ├── Home.tsx       # Landing page
+            ├── Login.tsx      # Login page
+            └── Register.tsx   # Registration page
 ```
 
 ## Links
