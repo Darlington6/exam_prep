@@ -13,9 +13,9 @@ This project aims to provide a simple, affordable, and accessible online platfor
 ## Team Members
 
 - UWIMANA Chantal - Frontend, DevOps - [Student ID]
-- Desmond Tunyiko -  Backend, DevOps- 
+- Desmond Tunyiko -  Backend, DevOps - 297697450
 - Nmesoma Solomon Peter - Backend, DevOps - [Student ID]
--Sharangabo Edouard - Frontend, DevOps 
+- Sharangabo Edouard - Frontend, DevOps 
 
 ## Project Overview
 
@@ -23,7 +23,7 @@ Exam Prep is a full-stack MERN (MongoDB, Express, React, Node.js) web applicatio
 
 The system automatically calculates scores and shows correct answers with explanations. Students can also view their past attempts and monitor their improvement over time through personalized dashboards.
 
-The platform includes an admin section where administrators can create exams, add questions, and manage content easily. The system is designed to be scalable, secure, and easy to maintain using modern development and DevOps practices including GitHub Actions and Docker containerization.
+The platform includes an admin section where administrators can create exams, add questions, and manage content easily. The system is designed to be scalable, secure, and easy to maintain using modern development and DevOps practices, including GitHub Actions and Docker containerization.
 
 ### Target Users
 Secondary school students
@@ -130,8 +130,7 @@ npm run dev
 1. Open your browser and navigate to `http://localhost:5173`
 2. Click "Register" to create a new account with your name, email, and password
 3. After registration, you'll be automatically logged in
-4. Access the dashboard at `/dashboard` to view available features
-5. Admins can manage exam content and questions (feature in development)
+4. The authentication feature is the only one implemented for this phase. Other features will be added later
 
 ## Project Structure
 
