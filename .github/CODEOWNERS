@@ -2,11 +2,11 @@
 * @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
 
 # Backend
-./exam-prep/backend/ @Nmesoma-solomon-peter @Darlington6 
+/backend/ @Nmesoma-solomon-peter @Darlington6 
 
 # Frontend
-./exam-prep/frontend/ @sharangabo @Uchantal
+/frontend/ @sharangabo @Uchantal
 
 # DevOps
 /.github/ @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
-./exam-prep/docker-compose.yml @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
+/docker-compose.yml @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
