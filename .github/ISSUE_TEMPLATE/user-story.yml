@@ -1,50 +1,61 @@
 name: "User Story"
 description: "A feature described from the user's perspective"
 title: "[STORY] Auth: Register / Login / Logout"
-labels: ["type: user-story", "backend", "frontend", "auth"]
+labels: ["type: user-story", "area: backend"]
+
 body:
-- type: textarea
-   id: story
-   attributes:
+  - type: textarea
+    id: story
+    attributes:
       label: User Story
-      description: "As a student, I want to register and log in so that I can access practice exams and save progress."
-   validations:
+      description: "Describe the story in the format: As a..., I want..., so that..."
+      value: |
+        As a student,
+        I want to register and log in,
+        so that I can access practice exams and save progress.
+    validations:
       required: true
-- type: textarea
-   id: acceptance-criteria
-   attributes:
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
       label: Acceptance Criteria
       description: "Define the conditions that must be met"
       value: |
-         - [ ] Registration endpoint creates a user and returns a JWT.
-         - [ ] Login endpoint returns a JWT for valid credentials.
-         - [ ] Frontend stores JWT and sends it in the Authorization header for protected requests.
-         - [ ] Logout clears stored token on the frontend.
-         - [ ] Roles `user` and `admin` are assignable and enforced on protected routes.
-   validations:
+        - [ ] Registration endpoint creates a user and returns a JWT.
+        - [ ] Login endpoint returns a JWT for valid credentials.
+        - [ ] Frontend stores JWT and sends it in the Authorization header.
+        - [ ] Logout clears stored token.
+        - [ ] Roles `user` and `admin` are enforced.
+    validations:
       required: true
-- type: textarea
-   id: technical-notes
-   attributes:
+
+  - type: textarea
+    id: technical-notes
+    attributes:
       label: Technical Notes
       description: "Any implementation considerations"
       value: |
-         - Add `role` field to the `User` model with enum: ["user","admin"].
-         - Use `bcryptjs` to hash passwords and `jsonwebtoken` for JWTs.
-         - Implement `auth` middleware to verify tokens and attach `req.user`.
-         - Implement `admin` middleware to protect admin-only endpoints.
-         - Add integration tests for register/login and role enforcement; include API docs update.
-- type: dropdown
-   id: priority
-   attributes:
+        - Add `role` field to User model with enum: ["user","admin"].
+        - Use bcryptjs for hashing.
+        - Use jsonwebtoken for JWT.
+        - Implement auth middleware.
+        - Add integration tests.
+
+  - type: dropdown
+    id: priority
+    attributes:
       label: Priority
       options:
-      - "🔴 High"
-   validations:
+        - "🔴 High"
+        - "🟡 Medium"
+        - "🟢 Low"
+    validations:
       required: true
-- type: input
-   id: story-points
-   attributes:
+
+  - type: input
+    id: story-points
+    attributes:
       label: Story Points
       description: "Estimated complexity (1, 2, 3, 5, 8, 13)"
-      value: "3"
+      placeholder: "3"
