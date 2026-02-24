@@ -26,7 +26,7 @@ export function Register() {
       let msg = 'Registration failed.';
       const ax = err as { code?: string; response?: { data?: { message?: string }; status?: number } } | null;
       if (ax?.code === 'ERR_NETWORK' || !ax?.response) {
-        msg = "Can't reach the backend. In exam-prep/backend run: npm run dev (server runs on port 5001).";
+        msg = "Can't reach the backend. In backend directory run: npm run dev (server runs on port 5001).";
       } else if (ax.response?.data?.message) {
         msg = String(ax.response.data.message);
       } else if (ax.response?.status === 409) {

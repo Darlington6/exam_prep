@@ -136,12 +136,16 @@ npm run dev
 
 ```
 exam_prep/
-├── LICENSE
-├── README.md
+├── .github/                    # GitHub configuration
+│   └── ISSUE_TEMPLATE/        # Issue templates
+├── .gitignore                 # Git ignore rules
+├── LICENSE                    # MIT License
+├── README.md                  # Project documentation
+│
 ├── backend/                    # Node.js/Express backend
-│   ├── server.js              # Entry point, Express app setup
-│   ├── package.json           # Backend dependencies
 │   ├── .env.example           # Environment variables template
+│   ├── package.json           # Backend dependencies
+│   ├── server.js              # Entry point, Express app setup
 │   ├── middleware/
 │   │   └── auth.js            # Authentication middleware
 │   ├── models/
@@ -150,13 +154,18 @@ exam_prep/
 │       └── auth.js            # Authentication routes
 │
 └── frontend/                   # React/TypeScript frontend
+    ├── .env.example           # Environment variables template
+    ├── .gitignore             # Frontend-specific ignore rules
     ├── index.html             # HTML entry point
     ├── package.json           # Frontend dependencies
     ├── vite.config.ts         # Vite configuration
     ├── tsconfig.json          # TypeScript configuration
+    ├── tsconfig.app.json      # TypeScript app configuration
+    ├── tsconfig.node.json     # TypeScript node configuration
     ├── eslint.config.js       # ESLint configuration
-    ├── .env.example           # Environment variables template
+    ├── README.md              # Frontend-specific documentation
     ├── public/                # Static assets
+    │   └── vite.svg           # Vite logo
     └── src/
         ├── main.tsx           # React entry point
         ├── App.tsx            # Main App component with routing
@@ -164,6 +173,8 @@ exam_prep/
         ├── index.css          # Base styles
         ├── api/
         │   └── client.ts      # Axios client with interceptors
+        ├── assets/
+        │   └── react.svg      # React logo
         ├── components/
         │   └── ProtectedRoute.tsx  # Route protection
         ├── contexts/
