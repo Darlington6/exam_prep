@@ -36,7 +36,10 @@ Schools and training centers
 
 ### Core Features
 
-- **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password hashing
+- **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password 
+hashing
+
+
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
 - **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions
 - **Instant Results and Feedback**: Immediate scoring with correct answers and detailed explanations after submission
