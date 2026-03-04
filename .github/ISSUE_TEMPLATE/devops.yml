@@ -1,0 +1,46 @@
+name: "DevOps / Infrastructure"
+description: "CI/CD, infrastructure, monitoring, or deployment task"
+title: "[DEVOPS] %short title%"
+labels: ["type: devops"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "What infrastructure or DevOps work is needed"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Area"
+      options:
+        - "CI/CD Pipeline"
+        - "Infrastructure as Code"
+        - "Containerization"
+        - "Monitoring & Alerting"
+        - "Security & Compliance"
+        - "Deployment"
+        - "Environment Management"
+        - "Backup & Recovery"
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Impact & Risk Assessment"
+      description: "What systems are affected? What's the rollback plan?"
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Target Environment"
+      options:
+        - "Development"
+        - "Staging"
+        - "Production"
+        - "All"
+    validations:
+      required: true
