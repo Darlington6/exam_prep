@@ -1,22 +1,28 @@
 name: CI Pipeline
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  backend:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Setup Node
+      - name: Setup Node 24
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
+
+      # Backend
 
       - name: Install Backend Dependencies
         run: |
@@ -26,25 +32,29 @@ jobs:
       - name: Run Backend Tests
         run: |
           cd backend
-          npm test || echo "No tests yet"
+          npm test
 
-  frontend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+      # Frontend
 
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
 
+      - name: Run Frontend Lint
+        run: |
+          cd frontend
+          npm run lint
+
       - name: Build Frontend
         run: |
           cd frontend
           npm run build
+
+      # Docker Build Check
+
+      - name: Build Backend Docker Image
+        run: docker build -t exam_backend ./backend
+
+      - name: Build Frontend Docker Image
+        run: docker build -t exam_frontend ./frontend
