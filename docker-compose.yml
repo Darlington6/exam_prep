@@ -1,28 +1,38 @@
 version: "3.8"
 
 services:
+  # Backend API service
   backend:
     build: ./backend
+    container_name: exam_backend
     ports:
-      - "5000:5000"
+      - "5001:5001"   # Host:Container
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
-      - mongo
+      - mongo        # Ensure Mongo starts first
+    restart: unless-stopped
 
+  # Frontend served via Nginx
   frontend:
     build: ./frontend
+    container_name: exam_frontend
     ports:
-      - "5173:5173"
+      - "3000:80"    # Host:Container (Nginx runs on 80)
     depends_on:
       - backend
+    restart: unless-stopped
 
+  # MongoDB database service
   mongo:
     image: mongo:6
+    container_name: exam_mongo
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
+      - mongo-data:/data/db   # Persistent database storage
+    restart: unless-stopped
 
+# Named volume for persistent MongoDB data
 volumes:
   mongo-data:
