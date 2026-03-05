@@ -54,18 +54,75 @@ hashing
 - **Backend**: Node.js/Express
 - **Frontend**: React with TypeScript
 - **Database**: MongoDB
-- **Other**: JWT authentication, bcryptjs, Axios, React Router, Vite, GitHub Actions (planned), Docker (planned)
+- **DevOps**: Docker, Docker Compose, GitHub Actions (planned)
+- **Other**: JWT authentication, bcryptjs, Axios, React Router, Vite
 
 ## Getting Started
 
 ### Prerequisites
 
+**For Docker setup (Recommended):**
+- Docker v20.10 or higher
+- Docker Compose v2.0 or higher
+- Git for version control
+
+**For manual setup:**
 - Node.js v16 or higher
 - npm v8 or higher
 - MongoDB v4.4 or higher (local installation or MongoDB Atlas account)
 - Git for version control
 
-### Installation
+### Quick Start with Docker (Recommended)
+
+The easiest way to run the application is using Docker Compose, which sets up all services with a single command.
+
+1. Clone the repository
+```bash
+git clone https://github.com/Darlington6/exam_prep.git
+cd exam_prep
+```
+
+2. Create backend environment file
+
+Create a `.env` file in the `backend` directory:
+```bash
+PORT=5001
+MONGO_URI=mongodb://mongo:27017/exam_prep_db
+JWT_SECRET=your-super-secret-key-change-in-production
+JWT_EXPIRES_IN=7d
+```
+
+3. Start all services with Docker Compose
+```bash
+docker-compose up --build
+```
+
+This command will:
+- Build the backend and frontend Docker images
+- Start MongoDB database container
+- Start the backend API on port 5001
+- Start the frontend on port 3000
+- Set up networking between all services
+- Create persistent volume for MongoDB data
+
+4. Access the application
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5001
+- MongoDB: localhost:27017
+
+To stop all services:
+```bash
+docker-compose down
+```
+
+To stop and remove all data (including database):
+```bash
+docker-compose down -v
+```
+
+### Manual Installation (Alternative)
+
+If you prefer to run the application without Docker:
 
 1. Clone the repository
 ```bash
@@ -130,10 +187,21 @@ npm run dev
 
 ### Usage
 
-1. Open your browser and navigate to `http://localhost:5173`
-2. Click "Register" to create a new account with your name, email, and password
-3. After registration, you'll be automatically logged in
-4. The authentication feature is the only one implemented for this phase. Other features will be added later
+**With Docker:**
+1. Ensure Docker Compose is running: `docker-compose up`
+2. Open your browser and navigate to `http://localhost:3000`
+3. Click "Register" to create a new account
+4. After registration, you'll be automatically logged in
+
+**Without Docker:**
+1. Ensure MongoDB is running
+2. Start the backend: `cd backend && npm run dev`
+3. Start the frontend: `cd frontend && npm run dev`
+4. Open your browser and navigate to `http://localhost:5173`
+5. Click "Register" to create a new account
+6. After registration, you'll be automatically logged in
+
+The authentication feature is the only one implemented for this phase. Other features will be added later.
 
 ## Project Structure
 
@@ -142,11 +210,14 @@ exam_prep/
 ├── .github/                    # GitHub configuration
 │   └── ISSUE_TEMPLATE/        # Issue templates
 ├── .gitignore                 # Git ignore rules
+├── docker-compose.yml         # Docker Compose orchestration
 ├── LICENSE                    # MIT License
 ├── README.md                  # Project documentation
 │
 ├── backend/                    # Node.js/Express backend
+│   ├── .dockerignore          # Docker ignore rules for backend
 │   ├── .env.example           # Environment variables template
+│   ├── Dockerfile             # Backend container configuration
 │   ├── package.json           # Backend dependencies
 │   ├── server.js              # Entry point, Express app setup
 │   ├── middleware/
@@ -157,8 +228,10 @@ exam_prep/
 │       └── auth.js            # Authentication routes
 │
 └── frontend/                   # React/TypeScript frontend
+    ├── .dockerignore          # Docker ignore rules for frontend
     ├── .env.example           # Environment variables template
     ├── .gitignore             # Frontend-specific ignore rules
+    ├── Dockerfile             # Frontend container configuration
     ├── index.html             # HTML entry point
     ├── package.json           # Frontend dependencies
     ├── vite.config.ts         # Vite configuration
