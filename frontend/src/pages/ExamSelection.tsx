@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { examApi, type Exam } from '../api/client';
@@ -21,22 +21,23 @@ export function ExamSelection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadExams();
-  }, [categoryId]);
-
-  const loadExams = async () => {
+  const loadExams = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       const { data } = await examApi.getByCategory(categoryId || '');
       setExams(data.exams);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load exams');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load exams');
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryId]);
+
+  useEffect(() => {
+    loadExams();
+  }, [loadExams]);
 
   const handleStartExam = (examId: string) => {
     navigate(`/exam/${examId}`);

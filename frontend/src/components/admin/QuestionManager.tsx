@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminQuestionApi, type Question, type Exam } from '../../api/client';
 import { QuestionForm } from './QuestionForm';
 import '../../styles/QuestionManager.css';
@@ -15,22 +15,23 @@ export function QuestionManager({ exam, onClose }: QuestionManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadQuestions();
-  }, [exam._id]);
-
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       const { data } = await adminQuestionApi.getByExam(exam._id);
       setQuestions(data.questions.sort((a: Question, b: Question) => a.order - b.order));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load questions');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load questions');
     } finally {
       setLoading(false);
     }
-  };
+  }, [exam._id]);
+
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
 
   const handleCreateNew = () => {
     setEditingQuestionId(null);
@@ -50,8 +51,9 @@ export function QuestionManager({ exam, onClose }: QuestionManagerProps) {
     try {
       await adminQuestionApi.delete(questionId);
       setQuestions(questions.filter(q => q._id !== questionId));
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete question');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to delete question');
     }
   };
 
