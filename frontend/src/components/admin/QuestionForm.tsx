@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminQuestionApi, type CreateQuestionData } from '../../api/client';
 import '../../styles/QuestionForm.css';
 
@@ -31,13 +31,7 @@ export function QuestionForm({ examId, questionId, onSuccess, onCancel }: Questi
   const [error, setError] = useState('');
   const [loadingQuestion, setLoadingQuestion] = useState(false);
 
-  useEffect(() => {
-    if (questionId) {
-      loadQuestion();
-    }
-  }, [questionId]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     if (!questionId) return;
 
     try {
@@ -50,12 +44,19 @@ export function QuestionForm({ examId, questionId, onSuccess, onCancel }: Questi
         order: data.question.order,
       });
       setOptions(data.question.options);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load question');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load question');
     } finally {
       setLoadingQuestion(false);
     }
-  };
+  }, [questionId]);
+
+  useEffect(() => {
+    if (questionId) {
+      loadQuestion();
+    }
+  }, [questionId, loadQuestion]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,8 +97,9 @@ export function QuestionForm({ examId, questionId, onSuccess, onCancel }: Questi
         await adminQuestionApi.create(submitData);
       }
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || `Failed to ${questionId ? 'update' : 'create'} question`);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || `Failed to ${questionId ? 'update' : 'create'} question`);
     } finally {
       setLoading(false);
     }

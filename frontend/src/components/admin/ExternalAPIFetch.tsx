@@ -40,8 +40,9 @@ export function ExternalAPIFetch({ onSuccess, onCancel }: ExternalAPIFetchProps)
       setTimeout(() => {
         onSuccess();
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch exams from external API');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch exams from external API');
     } finally {
       setLoading(false);
     }
