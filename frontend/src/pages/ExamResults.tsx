@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { examApi, type Question } from '../api/client';
 import '../styles/ExamResults.css';
 
@@ -26,21 +26,21 @@ export function ExamResults() {
   const [loading, setLoading] = useState(true);
   const [showAnswers, setShowAnswers] = useState(false);
 
-  useEffect(() => {
-    loadResults();
-  }, []);
-
-  const loadResults = async () => {
+  const loadResults = useCallback(async () => {
     try {
       setLoading(true);
       const { data } = await examApi.getQuestions(examId || '');
       setQuestions(data.questions);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load questions:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [examId]);
+
+  useEffect(() => {
+    loadResults();
+  }, [loadResults]);
 
   const handleRetakeExam = () => {
     navigate(`/exam/${examId}`);

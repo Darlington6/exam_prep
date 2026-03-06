@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminExamApi, type Exam } from '../../api/client';
 import { QuestionManager } from './QuestionManager';
 import '../../styles/ExamList.css';
@@ -14,22 +14,23 @@ export function ExamList({ onEdit, onCreate }: ExamListProps) {
   const [error, setError] = useState('');
   const [managingExamId, setManagingExamId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadExams();
-  }, []);
-
-  const loadExams = async () => {
+  const loadExams = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       const { data } = await adminExamApi.getAll();
       setExams(data.exams);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load exams');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load exams');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadExams();
+  }, [loadExams]);
 
   const handleDelete = async (examId: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"? This will also delete all associated questions.`)) {
@@ -39,8 +40,9 @@ export function ExamList({ onEdit, onCreate }: ExamListProps) {
     try {
       await adminExamApi.delete(examId);
       setExams(exams.filter(e => e._id !== examId));
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete exam');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to delete exam');
     }
   };
 
@@ -48,8 +50,9 @@ export function ExamList({ onEdit, onCreate }: ExamListProps) {
     try {
       const { data } = await adminExamApi.toggleActive(examId);
       setExams(exams.map(e => e._id === examId ? data.exam : e));
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update exam status');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to update exam status');
     }
   };
 

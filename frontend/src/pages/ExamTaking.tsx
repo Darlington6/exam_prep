@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { examApi, type Exam, type Question } from '../api/client';
 import '../styles/ExamTaking.css';
@@ -15,9 +15,43 @@ export function ExamTaking() {
   const [error, setError] = useState('');
   const [showWarning, setShowWarning] = useState(false);
 
+  const loadExam = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const [examRes, questionsRes] = await Promise.all([
+        examApi.getById(examId || ''),
+        examApi.getQuestions(examId || '')
+      ]);
+      setExam(examRes.data.exam);
+      setQuestions(questionsRes.data.questions);
+      setTimeRemaining(examRes.data.exam.duration * 60); // Convert to seconds
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load exam');
+    } finally {
+      setLoading(false);
+    }
+  }, [examId]);
+
+  const handleSubmit = useCallback(async () => {
+    if (Object.keys(answers).length < questions.length) {
+      setShowWarning(true);
+      return;
+    }
+
+    try {
+      const { data } = await examApi.submitAttempt(examId || '', answers);
+      navigate(`/exam/${examId}/results`, { state: { attempt: data.attempt } });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to submit exam');
+    }
+  }, [answers, questions.length, examId, navigate]);
+
   useEffect(() => {
     loadExam();
-  }, [examId]);
+  }, [loadExam]);
 
   useEffect(() => {
     if (timeRemaining <= 0) return;
@@ -33,25 +67,7 @@ export function ExamTaking() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining]);
-
-  const loadExam = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const [examRes, questionsRes] = await Promise.all([
-        examApi.getById(examId || ''),
-        examApi.getQuestions(examId || '')
-      ]);
-      setExam(examRes.data.exam);
-      setQuestions(questionsRes.data.questions);
-      setTimeRemaining(examRes.data.exam.duration * 60); // Convert to seconds
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load exam');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [timeRemaining, handleSubmit]);
 
   const handleAnswerSelect = (optionIndex: number) => {
     setAnswers({
@@ -74,20 +90,6 @@ export function ExamTaking() {
 
   const handleQuestionNavigate = (index: number) => {
     setCurrentQuestion(index);
-  };
-
-  const handleSubmit = async () => {
-    if (Object.keys(answers).length < questions.length) {
-      setShowWarning(true);
-      return;
-    }
-
-    try {
-      const { data } = await examApi.submitAttempt(examId || '', answers);
-      navigate(`/exam/${examId}/results`, { state: { attempt: data.attempt } });
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit exam');
-    }
   };
 
   const formatTime = (seconds: number) => {

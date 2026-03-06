@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminExamApi, type CreateExamData } from '../../api/client';
 import '../../styles/ExamForm.css';
 
@@ -21,13 +21,7 @@ export function ExamForm({ examId, onSuccess, onCancel }: ExamFormProps) {
   const [error, setError] = useState('');
   const [loadingExam, setLoadingExam] = useState(false);
 
-  useEffect(() => {
-    if (examId) {
-      loadExam();
-    }
-  }, [examId]);
-
-  const loadExam = async () => {
+  const loadExam = useCallback(async () => {
     if (!examId) return;
     
     try {
@@ -41,12 +35,19 @@ export function ExamForm({ examId, onSuccess, onCancel }: ExamFormProps) {
         duration: data.exam.duration,
         passingScore: data.exam.passingScore,
       });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load exam');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load exam');
     } finally {
       setLoadingExam(false);
     }
-  };
+  }, [examId]);
+
+  useEffect(() => {
+    if (examId) {
+      loadExam();
+    }
+  }, [examId, loadExam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +66,9 @@ export function ExamForm({ examId, onSuccess, onCancel }: ExamFormProps) {
         await adminExamApi.create(formData);
       }
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || `Failed to ${examId ? 'update' : 'create'} exam`);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || `Failed to ${examId ? 'update' : 'create'} exam`);
     } finally {
       setLoading(false);
     }
