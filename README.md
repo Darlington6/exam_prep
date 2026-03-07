@@ -8,11 +8,11 @@ Many students across Africa prepare for important national examinations at the e
 
 However, access to structured and interactive revision materials remains limited in many areas. Students often depend on printed past questions, textbooks, or informal study groups. In some communities, access to quality digital learning platforms is still developing. As a result, many learners do not receive instant feedback on their performance and cannot easily track their progress over time.
 
-This project aims to provide a simple, affordable, and accessible online platform where students can practice exam questions, receive immediate results, and monitor their improvement. By supporting digital learning and self-assessment, the platform contributes to improving exam preparation and educational outcomes across African countries.
+This project aims to provide a simple, affordable, and accessible online platform where students can practice exam questions, receive immediate results, and monitor their improvement. By supporting digital learning and self-assessment, the platform helps improve exam preparation and educational outcomes across African countries.
 
 ## Team Members
 
-- UWIMANA Chantal - Frontend, DevOps - [Student ID]
+- UWIMANA Chantal - Frontend, DevOps - 755990021
 - Desmond Tunyinko - Backend, DevOps - 297697450
 - Nmesoma Solomon Peter - Backend, DevOps - 764925507
 - Sharangabo Edouard - Frontend, DevOps - [Student ID]
