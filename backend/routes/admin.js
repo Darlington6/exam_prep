@@ -278,12 +278,173 @@ router.post('/external/fetch', async (req, res) => {
 
     const externalData = await response.json();
 
-    // This is a flexible handler — the external API format may vary.
-    // For now, return the raw data and let the frontend handle mapping.
+    // Normalize common external API shapes into { exams, questions }
+    const normalize = (data) => {
+      let exams = [];
+      let questions = [];
+
+      const classifyItem = (item) => {
+        if (!item || typeof item !== 'object') return;
+        if ('questionText' in item || 'options' in item || 'answers' in item) {
+          questions.push(item);
+        } else if ('title' in item || 'description' in item || 'category' in item) {
+          exams.push(item);
+        } else if (Array.isArray(item.options) && item.options.length) {
+          questions.push(item);
+        } else {
+          exams.push(item);
+        }
+      };
+
+      const pushList = (list) => {
+        if (!Array.isArray(list)) return;
+        for (const it of list) classifyItem(it);
+      };
+
+      // Common shapes: array root, { exams: [], questions: [] }, { data: [] }, { items: [] }
+      if (Array.isArray(data)) {
+        pushList(data);
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.exams) || Array.isArray(data.questions)) {
+          if (Array.isArray(data.exams)) pushList(data.exams);
+          if (Array.isArray(data.questions)) pushList(data.questions);
+        } else if (Array.isArray(data.data) || Array.isArray(data.items)) {
+          pushList(data.data || data.items);
+        } else {
+          // Try any top-level array properties
+          for (const key of Object.keys(data)) {
+            if (Array.isArray(data[key])) pushList(data[key]);
+          }
+        }
+      }
+
+      // Apply limit to exams (limit parameter is intended to cap number of exams)
+      if (typeof limit === 'number' && limit > 0) exams = exams.slice(0, limit);
+
+      // Ensure arrays are returned (never undefined)
+      return { exams, questions };
+    };
+
+    const { exams, questions } = normalize(externalData || {});
+
+    // If exams contain nested questions, extract them and attach to the parent exam
+    for (const ex of exams) {
+      if (ex && Array.isArray(ex.questions) && ex.questions.length) {
+        ex._externalQuestions = ex.questions;
+      }
+    }
+
+    const createdExams = [];
+    const createdQuestions = [];
+    const warnings = [];
+
+    // Helper to sanitize options into { text, isCorrect }
+    const sanitizeOptions = (opts) => {
+      if (!Array.isArray(opts)) return [];
+      // If options are strings, convert to objects
+      if (opts.length && typeof opts[0] === 'string') {
+        return opts.map((t) => ({ text: String(t), isCorrect: false }));
+      }
+      return opts.map((o) => ({ text: String(o.text || o.label || ''), isCorrect: !!o.isCorrect }));
+    };
+
+    // Persist exams and their nested questions (if any)
+    for (const extExam of exams) {
+      try {
+        const title = extExam.title || extExam.name || 'Untitled Exam';
+        const description = extExam.description || extExam.summary || '';
+        const categoryVal = (category || extExam.category || 'general').toLowerCase();
+        const difficulty = ['easy', 'medium', 'hard'].includes((extExam.difficulty || '').toLowerCase())
+          ? extExam.difficulty.toLowerCase()
+          : 'medium';
+        const duration = Number(extExam.duration) || 30;
+        const passingScore = Number(extExam.passingScore) || 50;
+
+        const examDoc = await Exam.create({
+          title,
+          description,
+          category: categoryVal,
+          difficulty,
+          duration,
+          passingScore,
+          createdBy: req.user._id,
+        });
+
+        createdExams.push(examDoc);
+
+        // Persist nested questions if present
+        const nested = extExam._externalQuestions || [];
+        for (const q of nested) {
+          try {
+            const options = sanitizeOptions(q.options || q.answers || q.choices || []);
+            const filtered = options.filter((o) => o.text && o.text.trim());
+            const hasCorrect = filtered.some((o) => o.isCorrect);
+            if (filtered.length < 2 || !hasCorrect) {
+              warnings.push(`Skipped question for exam ${title} due to invalid options`);
+              continue;
+            }
+
+            const questionDoc = await Question.create({
+              examId: examDoc._id,
+              questionText: q.questionText || q.text || q.prompt || 'Untitled question',
+              options: filtered,
+              explanation: q.explanation || q.explain || '',
+              points: Number(q.points) || 1,
+              order: Number(q.order) || 0,
+              createdBy: req.user._id,
+            });
+            createdQuestions.push(questionDoc);
+          } catch (qerr) {
+            console.error('Failed to create question:', qerr);
+            warnings.push(`Failed to create a question for exam ${extExam.title || extExam.name}`);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to create exam from external data:', e);
+        warnings.push(`Failed to create exam ${extExam.title || extExam.name}`);
+      }
+    }
+
+    // Try to attach any top-level questions to created exams by matching examTitle or exam field
+    for (const q of questions) {
+      try {
+        let targetExam = null;
+        if (q.examTitle) targetExam = createdExams.find((e) => e.title === q.examTitle || e.title === q.examTitle);
+        if (!targetExam && q.exam) targetExam = createdExams.find((e) => e._id.toString() === String(q.exam) || e.title === q.exam);
+
+        if (!targetExam) {
+          warnings.push('Found an unassigned question; no matching exam found');
+          continue;
+        }
+
+        const options = sanitizeOptions(q.options || q.answers || q.choices || []);
+        const filtered = options.filter((o) => o.text && o.text.trim());
+        const hasCorrect = filtered.some((o) => o.isCorrect);
+        if (filtered.length < 2 || !hasCorrect) {
+          warnings.push(`Skipped question for exam ${targetExam.title} due to invalid options`);
+          continue;
+        }
+
+        const questionDoc = await Question.create({
+          examId: targetExam._id,
+          questionText: q.questionText || q.text || q.prompt || 'Untitled question',
+          options: filtered,
+          explanation: q.explanation || q.explain || '',
+          points: Number(q.points) || 1,
+          order: Number(q.order) || 0,
+          createdBy: req.user._id,
+        });
+        createdQuestions.push(questionDoc);
+      } catch (err) {
+        console.error('Failed to attach top-level question:', err);
+      }
+    }
+
     res.json({
-      message: 'External data fetched successfully.',
-      exams: externalData.exams || [],
-      questions: externalData.questions || [],
+      message: 'External data fetched and imported successfully.',
+      exams: createdExams,
+      questions: createdQuestions,
+      warnings,
     });
   } catch (err) {
     console.error('External fetch error:', err);

@@ -36,6 +36,17 @@ router.get('/category/:category', async (req, res) => {
   }
 });
 
+// GET /api/exams/categories — list distinct exam categories
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Exam.distinct('category');
+    res.json({ categories });
+  } catch (err) {
+    console.error('Get categories error:', err);
+    res.status(500).json({ message: 'Failed to fetch categories.' });
+  }
+});
+
 // GET /api/exams/:id — get a single exam
 router.get('/:id', async (req, res) => {
   try {
