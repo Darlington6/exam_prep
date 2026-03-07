@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 24
 
-      # Backend
+      # Backend workflow
 
       - name: Install Backend Dependencies
         run: |
@@ -34,7 +34,7 @@ jobs:
           cd backend
           npm test
 
-      # Frontend
+      # Frontend workflow
 
       - name: Install Frontend Dependencies
         run: |
