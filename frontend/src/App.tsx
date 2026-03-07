@@ -4,6 +4,12 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Dashboard } from './pages/Dashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { ExamCategories } from './pages/ExamCategories';
+import { ExamSelection } from './pages/ExamSelection';
+import { ExamTaking } from './pages/ExamTaking';
+import { ExamResults } from './pages/ExamResults';
 import './App.css';
 
 function App() {
@@ -18,10 +24,47 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="dashboard-placeholder">
-                  <h2>Dashboard</h2>
-                  <p>Protected area. More features coming soon.</p>
-                </div>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exams/categories"
+            element={
+              <ProtectedRoute>
+                <ExamCategories />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exams/category/:categoryId"
+            element={
+              <ProtectedRoute>
+                <ExamSelection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exam/:examId"
+            element={
+              <ProtectedRoute>
+                <ExamTaking />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exam/:examId/results"
+            element={
+              <ProtectedRoute>
+                <ExamResults />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

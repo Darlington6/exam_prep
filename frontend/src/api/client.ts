@@ -41,3 +41,107 @@ export interface User {
   email: string;
   role: string;
 }
+
+export interface Exam {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration: number;
+  passingScore: number;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Question {
+  _id: string;
+  examId: string;
+  questionText: string;
+  options: Array<{
+    text: string;
+    isCorrect: boolean;
+  }>;
+  explanation?: string;
+  points: number;
+  order: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateExamData {
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration: number;
+  passingScore: number;
+}
+
+export interface CreateQuestionData {
+  examId: string;
+  questionText: string;
+  options: Array<{
+    text: string;
+    isCorrect: boolean;
+  }>;
+  explanation?: string;
+  points?: number;
+  order?: number;
+}
+
+// Admin API for managing exams
+export const adminExamApi = {
+  getAll: () => api.get<{ exams: Exam[] }>('/admin/exams'),
+  getById: (id: string) => api.get<{ exam: Exam }>(`/admin/exams/${id}`),
+  create: (data: CreateExamData) => api.post<{ exam: Exam }>('/admin/exams', data),
+  update: (id: string, data: Partial<CreateExamData>) => 
+    api.put<{ exam: Exam }>(`/admin/exams/${id}`, data),
+  delete: (id: string) => api.delete(`/admin/exams/${id}`),
+  toggleActive: (id: string) => api.patch<{ exam: Exam }>(`/admin/exams/${id}/toggle-active`),
+};
+
+// Admin API for managing questions
+export const adminQuestionApi = {
+  getByExam: (examId: string) => 
+    api.get<{ questions: Question[] }>(`/admin/exams/${examId}/questions`),
+  getById: (id: string) => api.get<{ question: Question }>(`/admin/questions/${id}`),
+  create: (data: CreateQuestionData) => 
+    api.post<{ question: Question }>('/admin/questions', data),
+  update: (id: string, data: Partial<CreateQuestionData>) => 
+    api.put<{ question: Question }>(`/admin/questions/${id}`, data),
+  delete: (id: string) => api.delete(`/admin/questions/${id}`),
+};
+
+// Admin API for fetching exams from external sources
+export const adminExternalApi = {
+  fetchFromAPI: (data: { apiUrl: string; category?: string; limit?: number }) =>
+    api.post<{ exams: Exam[]; questions: Question[] }>('/admin/external/fetch', data),
+};
+
+// Student Exam API
+export const examApi = {
+  getByCategory: (category: string) => 
+    api.get<{ exams: Exam[] }>(`/exams/category/${category}`),
+  getById: (id: string) => api.get<{ exam: Exam }>(`/exams/${id}`),
+  getQuestions: (examId: string) => 
+    api.get<{ questions: Question[] }>(`/exams/${examId}/questions`),
+  submitAttempt: (examId: string, answers: Record<string, number>) =>
+    api.post<{ attempt: ExamAttempt }>(`/exams/${examId}/submit`, { answers }),
+  getAttempts: () => api.get<{ attempts: ExamAttempt[] }>('/exams/attempts'),
+};
+
+export interface ExamAttempt {
+  _id: string;
+  examId: string;
+  userId: string;
+  answers: Record<string, number>;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  passed: boolean;
+  completedAt: string;
+}
