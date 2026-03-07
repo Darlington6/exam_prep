@@ -3,6 +3,10 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 
 let mongoServer;
 
+// Provide env vars so tests don't depend on .env existing
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key';
+process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
 // MongoMemoryServer may need to download a binary on first run
 jest.setTimeout(30000);
 
