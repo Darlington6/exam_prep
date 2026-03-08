@@ -1,3 +1,10 @@
+/**
+ * ExamAttempt Model
+ *
+ * Records a student's submission for a specific exam. Stores the
+ * selected answers (as a Map of questionId → option index), the
+ * computed score, number of correct answers, and pass/fail status.
+ */
 const mongoose = require('mongoose');
 
 const examAttemptSchema = new mongoose.Schema(

@@ -1,3 +1,11 @@
+/**
+ * Express Application Entry Point
+ *
+ * Sets up middleware (CORS, JSON parsing), mounts API routes,
+ * and connects to MongoDB. When run directly (`node server.js`),
+ * starts the HTTP server; when imported (e.g. by tests), only
+ * exports the Express app without listening.
+ */
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');

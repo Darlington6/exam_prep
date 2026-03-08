@@ -1,3 +1,11 @@
+/**
+ * Student Exam Route Tests (15 test cases)
+ *
+ * Covers: browse by category, get single exam, get questions (answers stripped),
+ * submit attempt (auto-grading: all correct, all wrong, partial), and
+ * retrieve past attempts via the /api/exams endpoints.
+ * Uses MongoMemoryServer for isolated, in-memory database testing.
+ */
 require('./setup');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');

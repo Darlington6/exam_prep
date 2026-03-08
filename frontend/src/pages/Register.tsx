@@ -1,19 +1,35 @@
+/**
+ * Register Page Component
+ *
+ * Provides a registration form for new users. Validates that the password
+ * is at least 6 characters before submitting. On success, the user is
+ * automatically logged in and redirected to the home page.
+ * Handles and displays errors for network issues, duplicate emails, etc.
+ */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 
 export function Register() {
+  // Form field state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Handle form submission: validate password length, call the auth
+   * context register method, then navigate home or display an error.
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+
+    // Client-side password length validation
     if (password.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
@@ -23,6 +39,7 @@ export function Register() {
       await register(name, email, password);
       navigate('/', { replace: true });
     } catch (err: unknown) {
+      // Parse Axios error to provide a helpful, context-specific message
       let msg = 'Registration failed.';
       const ax = err as { code?: string; response?: { data?: { message?: string }; status?: number } } | null;
       if (ax?.code === 'ERR_NETWORK' || !ax?.response) {

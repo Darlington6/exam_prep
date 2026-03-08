@@ -1,3 +1,10 @@
+/**
+ * Question Model
+ *
+ * Represents a single multiple-choice question belonging to an exam.
+ * Each question has 2+ options (with isCorrect flags), an optional
+ * explanation, point value, and display order.
+ */
 const mongoose = require('mongoose');
 
 const optionSchema = new mongoose.Schema(
