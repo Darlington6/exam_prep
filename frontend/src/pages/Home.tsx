@@ -1,3 +1,12 @@
+/**
+ * Home Page Component
+ *
+ * Landing page for the Exam Prep application. Displays different content
+ * based on authentication status:
+ * - Authenticated users see navigation links (Dashboard, Browse Exams,
+ *   Admin Panel for admins) and a logout button.
+ * - Unauthenticated users see login and register links.
+ */
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 
@@ -8,12 +17,16 @@ export function Home() {
     <div className="home-page">
       <header className="home-header">
         <h1>Exam Prep</h1>
+
+        {/* Navigation bar — adapts based on whether the user is logged in */}
         <nav>
           {isAuthenticated ? (
             <>
               <span className="user-name">Hello, {user?.name}</span>
               <Link to="/dashboard" className="btn-nav">Dashboard</Link>
               <Link to="/exams/categories" className="btn-nav">Browse Exams</Link>
+
+              {/* Only show Admin Panel link for users with the admin role */}
               {user?.role === 'admin' && (
                 <Link to="/admin" className="btn-nav">Admin Panel</Link>
               )}
@@ -29,6 +42,8 @@ export function Home() {
           )}
         </nav>
       </header>
+
+      {/* Main content area — CTA buttons for logged-in users, or auth prompts for guests */}
       <main className="home-main">
         {isAuthenticated ? (
           <div>

@@ -1,3 +1,10 @@
+/**
+ * Admin Route Tests (13 test cases)
+ *
+ * Covers: authorization (401/403), exam CRUD, toggle-active,
+ * question CRUD — all via the /api/admin endpoints.
+ * Uses MongoMemoryServer for isolated, in-memory database testing.
+ */
 require('./setup');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');

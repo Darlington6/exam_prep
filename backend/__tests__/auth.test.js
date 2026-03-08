@@ -1,3 +1,11 @@
+/**
+ * Auth Route Tests (11 test cases)
+ *
+ * Covers: register (success, duplicate, missing fields, short password),
+ * login (success, wrong password, non-existent email, missing fields),
+ * and GET /me (valid token, no token, invalid token).
+ * Uses MongoMemoryServer for isolated, in-memory database testing.
+ */
 require('./setup');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');

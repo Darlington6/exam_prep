@@ -1,3 +1,10 @@
+/**
+ * Exam Model
+ *
+ * Represents an exam with a title, description, category, difficulty
+ * level, time duration (minutes), passing score (0-100), and active
+ * status. Indexed by category and isActive for efficient queries.
+ */
 const mongoose = require('mongoose');
 
 const examSchema = new mongoose.Schema(
