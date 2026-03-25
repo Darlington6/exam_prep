@@ -62,10 +62,7 @@ jobs:
         run: docker build -t exam_frontend ./frontend
 
       # Container Image Security Scanning (Trivy)
-      # exit-code: 1 fails the pipeline on CRITICAL or HIGH vulnerabilities.
-      # ignore-unfixed: true skips vulnerabilities with no available fix,
-      # so third-party images (like mongo) don't permanently block CI.
-
+      
       - name: Scan Backend Image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -92,9 +89,7 @@ jobs:
 
       # IaC Security Scanning (tfsec)
       # Scans Terraform code for misconfigurations.
-      # Rules intentionally suppressed (e.g. bastion SSH open to internet)
-      # are marked with tfsec:ignore comments directly in the .tf files.
-
+     
       - name: Run tfsec (Terraform IaC Security Scan)
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
