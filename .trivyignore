@@ -1,0 +1,23 @@
+# Explicitly accepted vulnerabilities that cannot be fixed by this project.
+# Each entry is documented with the reason so this file is auditable.
+# Review and remove entries as new base images / upstream packages are released.
+
+# zlib CVE in node:24-alpine base OS layer.
+# Alpine has released a fix (1.3.2-r0) but the node:24-alpine Docker image
+# has not yet been rebuilt with the patched packages. Remove once a new
+# node:24-alpine image ships with zlib >= 1.3.2-r0.
+CVE-2026-22184
+
+# minimatch CVEs in npm's own bundled internal packages
+# (usr/local/lib/node_modules/npm/...). These are NOT in our application
+# dependencies — they are part of the npm CLI bundled inside the Node.js
+# Docker image. We have no control over them; they are fixed upstream in
+# newer npm releases. Remove once node:24-alpine ships a patched npm version.
+CVE-2026-26996
+CVE-2026-27903
+CVE-2026-27904
+
+# tar CVEs in npm's own bundled internal packages (same reason as minimatch).
+CVE-2026-26960
+CVE-2026-29786
+CVE-2026-31802
