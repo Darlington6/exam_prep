@@ -363,6 +363,24 @@ csx/
 ecf/
 rcf/
 
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
+
+# Ansible — inventory.ini is generated dynamically in the CD pipeline
+ansible/inventory.ini
+
+# SSH private keys — never commit these; use GitHub Secrets instead
+*.pem
+id_rsa
+id_ed25519
+id_ecdsa
+*.key
+
 # Windows Store app package directories and files
 AppPackages/
 BundleArtifacts/
