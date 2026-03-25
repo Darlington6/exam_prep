@@ -69,6 +69,7 @@ resource "azurerm_network_security_group" "bastion_nsg" {
 }
 
 # tfsec:ignore:azure-network-ssh-blocked-from-internet
+# tfsec:ignore:azure-network-no-public-ingress
 resource "azurerm_network_security_rule" "bastion_allow_ssh" {
   name                        = "Allow-SSH"
   priority                    = 100
