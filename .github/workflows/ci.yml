@@ -87,3 +87,5 @@ jobs:
         with:
           working_directory: terraform
           soft_fail: false # Explicitly fail the build if issues are found
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
