@@ -153,6 +153,7 @@ resource "azurerm_public_ip" "bastion_ip" {
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_network_interface" "bastion_nic" {
@@ -217,7 +218,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "exam-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  size                = "Standard_B2s" # 2 vCPU / 4 GiB — needed to run Docker containers
+  size                = "Standard_B2ms" # 2 vCPU / 8 GiB
   admin_username      = var.admin_username
 
   network_interface_ids = [azurerm_network_interface.vm_nic.id]
