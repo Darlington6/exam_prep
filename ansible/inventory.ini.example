@@ -1,0 +1,10 @@
+# inventory.ini.example
+# This is a template. The actual inventory.ini is generated dynamically in
+# the CD pipeline (see .github/workflows/cd.yml). Never commit a real inventory.ini
+# with live IP addresses to the repository.
+
+[bastion]
+<BASTION_PUBLIC_IP> ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+[app]
+<APP_VM_PRIVATE_IP> ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyJump=azureuser@<BASTION_PUBLIC_IP> -o StrictHostKeyChecking=no'
