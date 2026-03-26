@@ -18,20 +18,11 @@ RUN npm run build
 # Stage 2: Production image
 FROM nginx:alpine
 
-# Create non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Replace default nginx config with our SPA-aware config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Set permissions
-RUN chown -R appuser:appgroup /usr/share/nginx/html
-
-# Switch user
-USER appuser
 
 # Expose port
 EXPOSE 80
