@@ -216,6 +216,29 @@ router.delete('/questions/:id', async (req, res) => {
 
 // ── External API fetch ────────────────────────────────────────────────────────
 
+function decodeHtmlEntities(str) {
+  return String(str)
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&hellip;/g, '\u2026')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
+}
+
+function normalizeDifficulty(d) {
+  if (!d) return 'medium';
+  const lower = String(d).toLowerCase();
+  return ['easy', 'medium', 'hard'].includes(lower) ? lower : 'medium';
+}
+
 // POST /api/admin/external/fetch
 router.post('/external/fetch', async (req, res) => {
   try {
@@ -248,7 +271,7 @@ router.post('/external/fetch', async (req, res) => {
 
     const httpLib = parsedUrl.protocol === 'https:' ? require('https') : require('http');
     const raw = await new Promise((resolve, reject) => {
-      const req = httpLib.get(apiUrl.trim(), { timeout: 10000 }, (response) => {
+      const httpReq = httpLib.get(apiUrl.trim(), { timeout: 10000 }, (response) => {
         let body = '';
         response.on('data', (chunk) => { body += chunk; });
         response.on('end', () => {
@@ -257,34 +280,122 @@ router.post('/external/fetch', async (req, res) => {
           }
         });
       });
-      req.on('error', reject);
-      req.on('timeout', () => { req.destroy(); reject(new Error('External API request timed out.')); });
+      httpReq.on('error', reject);
+      httpReq.on('timeout', () => { httpReq.destroy(); reject(new Error('External API request timed out.')); });
     });
 
-    const items = Array.isArray(raw)
-      ? raw
-      : raw.exams || raw.results || raw.data || [];
-
+    const numLimit = Math.max(1, Number(limit) || 10);
     const savedExams = [];
     const savedQuestions = [];
 
-    for (const item of items.slice(0, Math.max(1, Number(limit) || 10))) {
-      try {
-        if (item.title && item.difficulty) {
+    // ── Open Trivia DB ───────────────────────────────────────────────────────
+    // Shape: { response_code: 0, results: [{ question, correct_answer, incorrect_answers, difficulty, category }] }
+    if (raw.response_code !== undefined && Array.isArray(raw.results)) {
+      if (raw.response_code !== 0) {
+        return res.status(400).json({ message: `Open Trivia DB returned error code ${raw.response_code}. Try a different category or fewer questions.` });
+      }
+      const items = raw.results.slice(0, numLimit);
+      if (items.length === 0) {
+        return res.json({ exams: [], questions: [] });
+      }
+      const exam = await Exam.create({
+        title: category || items[0].category || 'Trivia Quiz',
+        description: 'Imported from Open Trivia DB',
+        category: category || items[0].category || 'general',
+        difficulty: normalizeDifficulty(items[0].difficulty),
+        duration: 30,
+        passingScore: 60,
+        createdBy: req.user._id,
+      });
+      savedExams.push(exam);
+
+      const questionDocs = items.map((item, i) => ({
+        examId: exam._id,
+        questionText: decodeHtmlEntities(item.question),
+        options: [
+          { text: decodeHtmlEntities(item.correct_answer), isCorrect: true },
+          ...item.incorrect_answers.map(a => ({ text: decodeHtmlEntities(a), isCorrect: false })),
+        ],
+        explanation: '',
+        points: 1,
+        order: i,
+        createdBy: req.user._id,
+      }));
+      const questions = await Question.insertMany(questionDocs);
+      savedQuestions.push(...questions);
+
+    // ── QuizAPI ──────────────────────────────────────────────────────────────
+    // Shape: { status: 200, data: [{ question, answers: {answer_a...}, correct_answers: {answer_a_correct...} }] }
+    } else if (Array.isArray(raw.data) && raw.data.length > 0 && raw.data[0] !== null && typeof raw.data[0].answers === 'object') {
+      const items = raw.data.slice(0, numLimit);
+      const exam = await Exam.create({
+        title: category || items[0].category || 'Quiz',
+        description: 'Imported from QuizAPI',
+        category: category || items[0].category || 'general',
+        difficulty: normalizeDifficulty(items[0].difficulty),
+        duration: 30,
+        passingScore: 60,
+        createdBy: req.user._id,
+      });
+      savedExams.push(exam);
+
+      const questionDocs = items.map((item, i) => {
+        const options = Object.entries(item.answers)
+          .filter(([, v]) => v !== null && v !== '')
+          .map(([key, text]) => ({
+            text: String(text),
+            isCorrect: item.correct_answers[`${key}_correct`] === 'true',
+          }));
+        return {
+          examId: exam._id,
+          questionText: item.question,
+          options,
+          explanation: item.explanation || '',
+          points: 1,
+          order: i,
+          createdBy: req.user._id,
+        };
+      });
+      const questions = await Question.insertMany(questionDocs);
+      savedQuestions.push(...questions);
+
+    // ── Generic exam-object list ─────────────────────────────────────────────
+    // Shape: [{ title, difficulty, questions?: [...] }] or { exams: [...] }
+    } else {
+      const examItems = (Array.isArray(raw) ? raw : raw.exams || []).slice(0, numLimit);
+      if (examItems.length === 0 || !examItems[0].title) {
+        return res.status(400).json({
+          message: 'Unrecognised API format. Supported formats: Open Trivia DB, QuizAPI, or a JSON array/object with exam objects (each requiring a "title" field).',
+        });
+      }
+      for (const item of examItems) {
+        try {
           const exam = await Exam.create({
             title: String(item.title).trim(),
             description: item.description ? String(item.description).trim() : '',
             category: category || item.category || 'general',
-            difficulty: ['easy', 'medium', 'hard'].includes(item.difficulty)
-              ? item.difficulty
-              : 'medium',
+            difficulty: normalizeDifficulty(item.difficulty),
             duration: Number(item.duration) || 30,
             passingScore: Number(item.passingScore) || 60,
             createdBy: req.user._id,
           });
           savedExams.push(exam);
-        }
-      } catch { /* skip malformed items */ }
+
+          if (Array.isArray(item.questions)) {
+            const questionDocs = item.questions.map((q, i) => ({
+              examId: exam._id,
+              questionText: String(q.questionText || q.question || '').trim(),
+              options: Array.isArray(q.options) ? q.options : [],
+              explanation: q.explanation || '',
+              points: Number(q.points) || 1,
+              order: q.order !== undefined ? q.order : i,
+              createdBy: req.user._id,
+            }));
+            const questions = await Question.insertMany(questionDocs);
+            savedQuestions.push(...questions);
+          }
+        } catch { /* skip malformed exam items */ }
+      }
     }
 
     res.json({ exams: savedExams, questions: savedQuestions });
