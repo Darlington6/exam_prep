@@ -1,6 +1,13 @@
 # Created by https://www.toptal.com/developers/gitignore/api/react,node,vs
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,node,vs
 
+# PM2 config contains credentials — never commit
+ecosystem.config.js
+
+# Lint output files
+lint_output.txt
+eslint-report.*
+
 ### Node ###
 # Logs
 logs
