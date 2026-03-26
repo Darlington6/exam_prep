@@ -94,7 +94,7 @@ jobs:
       - name: Build and Tag Frontend Image
         run: |
           docker build \
-            --build-arg VITE_API_URL=https://${{ secrets.BASTION_IP }}.sslip.io/api \
+            --build-arg VITE_API_URL=https://${{ secrets.BASTION_IP }}.sslip.io \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:latest \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }} \
             ./frontend
