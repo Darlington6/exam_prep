@@ -38,7 +38,7 @@ Set these in **Terraform Cloud → Workspace → Variables**:
 | Variable | Type | Sensitive | Example |
 |----------|------|-----------|---------|
 | `resource_group_name` | Terraform | No | `exam-prep-group` |
-| `location` | Terraform | No | `South Africa North` (default) |
+| `location` | Terraform | No | `South Africa North` (default) — see fallback regions below |
 | `admin_username` | Terraform | No | `azureuser` |
 | `ssh_public_key` | Terraform | **Yes** | `ssh-rsa AAAA...` (RSA only — Azure does not support ed25519) |
 | `acr_name` | Terraform | No | `examprepregistry` |
@@ -49,6 +49,20 @@ Set these in **Terraform Cloud → Workspace → Variables**:
 | `ARM_SUBSCRIPTION_ID` | Environment | **Yes** | From service principal |
 
 > **SSH Key:** Must be an RSA key (`ssh-keygen -t rsa -b 4096`). Azure Linux VMs do not support ed25519 keys. Paste the full public key string — not a file path.
+
+## Fallback Regions
+
+`South Africa North` is the default. If VM capacity is unavailable there, change the `location` variable in Terraform Cloud to one of these tested fallbacks:
+
+| Region | Notes |
+|--------|-------|
+| `South Africa North` | **Default** — Johannesburg, closest to East Africa |
+| `Canada Central` | Toronto — DS/D-series VMs confirmed available |
+| `West Europe` | Netherlands — high capacity |
+
+**To switch region:** Terraform Cloud → Workspace → Variables → edit `location` → trigger a new run. All resources (VNet, VMs, CosmosDB, ACR) redeploy together in the new region.
+
+> B-series VM sizes (`Standard_B*`) are unavailable in South Africa North. The config uses `Standard_DS1_v2` (bastion) and `Standard_D2s_v3` (app VM), which are available in all three regions above.
 
 ## Outputs
 
