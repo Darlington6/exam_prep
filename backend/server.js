@@ -15,14 +15,6 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5001;
 
-// Listen first so the server is reachable even while DB connects
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error('DB connection error:', err.message));
-});
-
 app.get('/', (req, res) => res.send('API ok'));
 app.get('/api/auth/ping', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
@@ -37,3 +29,15 @@ app.use((err, req, res, _next) => {
     res.status(500).json({ message: 'Server error.' });
   }
 });
+
+// Only start the server if this file is run directly, not when imported by tests
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    mongoose.connect(process.env.MONGO_URI)
+      .then(() => console.log('MongoDB connected'))
+      .catch(err => console.error('DB connection error:', err.message));
+  });
+}
+
+module.exports = app;

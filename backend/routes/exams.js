@@ -46,12 +46,27 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // GET /api/exams/:id/questions
-// Returns full question data including isCorrect so ExamResults can show the answer review.
+// Returns questions with answer options stripped of isCorrect (security)
 router.get('/:id/questions', auth, async (req, res) => {
   try {
+    const exam = await Exam.findOne({ _id: req.params.id, isActive: true });
+    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+
     const questions = await Question.find({ examId: req.params.id })
       .sort({ order: 1, createdAt: 1 });
-    res.json({ questions });
+
+    // Strip isCorrect and explanation from each question for security
+    const sanitized = questions.map(q => {
+      const obj = q.toObject();
+      obj.options = obj.options.map(opt => {
+        const { isCorrect, ...option } = opt;
+        return option;
+      });
+      delete obj.explanation;
+      return obj;
+    });
+
+    res.json({ questions: sanitized });
   } catch (err) {
     console.error('Get questions error:', err.message);
     res.status(500).json({ message: 'Failed to load questions.' });
@@ -69,7 +84,10 @@ router.post('/:id/submit', auth, async (req, res) => {
       return res.status(400).json({ message: 'This exam has no questions.' });
     }
 
-    const { answers = {} } = req.body;
+    const { answers } = req.body;
+    if (!answers || Object.keys(answers).length === 0) {
+      return res.status(400).json({ message: 'No answers provided.' });
+    }
 
     let correctAnswers = 0;
     questions.forEach((q) => {
@@ -94,7 +112,7 @@ router.post('/:id/submit', auth, async (req, res) => {
       completedAt: new Date(),
     });
 
-    res.json({ attempt });
+    res.status(201).json({ attempt });
   } catch (err) {
     console.error('Submit exam error:', err.message);
     res.status(500).json({ message: 'Failed to submit exam.' });
