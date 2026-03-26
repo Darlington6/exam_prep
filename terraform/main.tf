@@ -173,7 +173,7 @@ resource "azurerm_linux_virtual_machine" "bastion" {
   name                = "exam-bastion"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  size                = "Standard_B1s" # Only runs nginx
+  size                = "Standard_DS1_v2" # Only runs nginx
   admin_username      = var.admin_username
 
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
@@ -218,7 +218,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "exam-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  size                = "Standard_B2ms" # 2 vCPU / 8 GiB
+  size                = "Standard_D2s_v3" # 2 vCPU / 8 GiB
   admin_username      = var.admin_username
 
   network_interface_ids = [azurerm_network_interface.vm_nic.id]
