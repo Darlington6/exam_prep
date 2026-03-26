@@ -23,6 +23,9 @@ provider "azurerm" {
 }
 
 # Resource Group
+# All resources below inherit var.location, so changing that one variable
+# in Terraform Cloud is all that's needed to redeploy in a fallback region.
+# See variables.tf for the approved fallback region list.
 
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name

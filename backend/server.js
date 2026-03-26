@@ -32,7 +32,7 @@ app.use((err, req, res, _next) => {
 
 // Only start the server if this file is run directly, not when imported by tests
 if (require.main === module) {
-  mongoose.connect(process.env.MONGO_URI)
+  mongoose.connect(process.env.MONGO_URI, { dbName: 'exam_prep_db' })
     .then(() => {
       console.log('MongoDB connected');
       app.listen(PORT, () => {

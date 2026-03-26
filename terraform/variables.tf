@@ -5,9 +5,31 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-  description = "Azure region for all resources"
+  description = <<-EOT
+    Azure region for all resources. Default is South Africa North (closest to East Africa).
+
+    Fallback regions (in order of preference) if South Africa North has capacity issues:
+      1. "Canada Central"    — consistently available; DS/D-series VMs confirmed available
+      2. "West Europe"       — high capacity; good for testing
+
+    To switch region: update this variable in Terraform Cloud -> Workspace -> Variables,
+    then trigger a new run. All resources (VNet, VMs, CosmosDB, ACR) move together.
+
+    Note: B-series VM sizes (Standard_B*) are unavailable in South Africa North.
+    DS/D-series (Standard_DS1_v2, Standard_D2s_v3) are used instead and are
+    available in all three regions listed above.
+  EOT
   type        = string
-  default     = "South Africa North" # Closest Azure region to East Africa
+  default     = "South Africa North"
+
+  validation {
+    condition = contains([
+      "South Africa North",
+      "Canada Central",
+      "West Europe",
+    ], var.location)
+    error_message = "Location must be one of the approved fallback regions: 'South Africa North', 'Canada Central', or 'West Europe'."
+  }
 }
 
 variable "admin_username" {
