@@ -1,7 +1,9 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // same as User model
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -67,7 +69,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully.',
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, username: user.username || '', avatar: user.avatar || '', notifications: user.notifications !== undefined ? user.notifications : true, createdAt: user.createdAt },
     });
   } catch (err) {
     if (res.headersSent) return;
@@ -110,7 +112,7 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful.',
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, username: user.username || '', avatar: user.avatar || '', notifications: user.notifications !== undefined ? user.notifications : true, createdAt: user.createdAt },
     });
   } catch (err) {
     if (!res.headersSent) {
@@ -126,9 +128,103 @@ router.get('/me', async (req, res) => {
     const user = await requireAuth(req, res);
     if (!user) return;
     const u = user.toObject();
-    res.json({ user: { id: u._id, name: u.name, email: u.email, role: u.role } });
+    res.json({
+      user: {
+        id: u._id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        username: u.username || '',
+        avatar: u.avatar || '',
+        notifications: u.notifications !== undefined ? u.notifications : true,
+        createdAt: u.createdAt,
+      }
+    });
   } catch (err) {
     if (!res.headersSent) res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ message: 'A valid email address is required.' });
+    }
+    const normalised = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalised)) {
+      return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+
+    const user = await User.findOne({ email: normalised });
+    // Always respond the same way to avoid user enumeration
+    if (!user) {
+      return res.json({ message: 'If that email is registered, a reset link has been sent.' });
+    }
+
+    // Generate raw token and store its SHA-256 hash
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    await sendPasswordResetEmail(normalised, resetUrl);
+
+    res.json({ message: 'If that email is registered, a reset link has been sent.' });
+  } catch (err) {
+    console.error('Forgot-password error:', err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Unable to send reset email. Please try again later.' });
+    }
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body || {};
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: 'Reset token is missing or invalid.' });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ message: 'New password is required.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain uppercase, lowercase, a number, and a special character.' });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    }).select('+resetPasswordToken +resetPasswordExpires');
+
+    if (!user) {
+      return res.status(400).json({ message: 'Reset link is invalid or has expired. Please request a new one.' });
+    }
+
+    user.password = await bcrypt.hash(password, 12);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password reset successful. You can now log in with your new password.' });
+  } catch (err) {
+    console.error('Reset-password error:', err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Failed to reset password. Please try again.' });
+    }
   }
 });
 

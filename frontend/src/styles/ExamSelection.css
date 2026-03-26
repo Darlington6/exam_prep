@@ -177,3 +177,112 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Search & filter bar ─────────────────────────────────────── */
+.exam-search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.75rem;
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.exam-search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.exam-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.exam-search-input {
+  width: 100%;
+  padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.exam-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+}
+
+.exam-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.1rem 0.25rem;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.exam-search-clear:hover {
+  color: #475569;
+  border-color: transparent;
+}
+
+.exam-difficulty-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.difficulty-chip {
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  transition: all 0.15s;
+}
+
+.difficulty-chip:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.difficulty-chip.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: white;
+}
+
+.difficulty-chip.easy.active  { background: #16a34a; border-color: transparent; color: white; }
+.difficulty-chip.medium.active { background: #d97706; border-color: transparent; color: white; }
+.difficulty-chip.hard.active   { background: #dc2626; border-color: transparent; color: white; }
+
+@media (max-width: 600px) {
+  .exam-search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .exam-difficulty-filters {
+    justify-content: center;
+  }
+}
