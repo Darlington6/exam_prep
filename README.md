@@ -8,14 +8,14 @@ Many students across Africa prepare for important national examinations at the e
 
 However, access to structured and interactive revision materials remains limited in many areas. Students often depend on printed past questions, textbooks, or informal study groups. In some communities, access to quality digital learning platforms is still developing. As a result, many learners do not receive instant feedback on their performance and cannot easily track their progress over time.
 
-This project aims to provide a simple, affordable, and accessible online platform where students can practice exam questions, receive immediate results, and monitor their improvement. By supporting digital learning and self-assessment, the platform contributes to improving exam preparation and educational outcomes across African countries.
+This project aims to provide a simple, affordable, and accessible online platform where students can practice exam questions, receive immediate results, and monitor their improvement. By supporting digital learning and self-assessment, the platform helps improve exam preparation and educational outcomes across African countries.
 
 ## Team Members
 
-- UWIMANA Chantal - Frontend, DevOps - [Student ID]
-- Desmond Tunyiko -  Backend, DevOps - 297697450
-- Nmesoma Solomon Peter - Backend, DevOps - [Student ID]
-- Sharangabo Edouard - Frontend, DevOps 
+- UWIMANA Chantal - Frontend, DevOps - 755990021
+- Desmond Tunyinko - Backend, DevOps - 297697450
+- Nmesoma Solomon Peter - Backend, DevOps - 764925507
+- Sharangabo Edouard - Frontend, DevOps - [Student ID]
 
 ## Project Overview
 
@@ -26,6 +26,7 @@ The system automatically calculates scores and shows correct answers with explan
 The platform includes an admin section where administrators can create exams, add questions, and manage content easily. The system is designed to be scalable, secure, and easy to maintain using modern development and DevOps practices, including GitHub Actions and Docker containerization.
 
 ### Target Users
+
 Secondary school students
 
 University students
@@ -36,9 +37,7 @@ Schools and training centers
 
 ### Core Features
 
-- **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password 
-hashing
-
+- **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password hashing
 
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
 - **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions
@@ -51,218 +50,394 @@ hashing
 
 ## Technology Stack
 
-- **Backend**: Node.js/Express
-- **Frontend**: React with TypeScript
-- **Database**: MongoDB
-- **DevOps**: Docker, Docker Compose, GitHub Actions (planned)
-- **Other**: JWT authentication, bcryptjs, Axios, React Router, Vite
+| Layer        | Technology                                                        |
+| ------------ | ----------------------------------------------------------------- |
+| **Frontend** | React 19, TypeScript, Vite 7, React Router 7, Axios               |
+| **Backend**  | Node.js 24, Express 4, Mongoose 9                                 |
+| **Database** | MongoDB 6 (Docker) / MongoDB Atlas (production)                   |
+| **Auth**     | JWT (jsonwebtoken), bcryptjs, role-based access (student / admin) |
+| **Testing**  | Jest 30, Supertest, MongoMemoryServer                             |
+| **DevOps**   | Docker, Docker Compose, GitHub Actions CI                         |
+| **Linting**  | ESLint 9, typescript-eslint                                       |
 
 ## Getting Started
 
 ### Prerequisites
 
-**For Docker setup (Recommended):**
-- Docker v20.10 or higher
-- Docker Compose v2.0 or higher
-- Git for version control
+**Docker setup (recommended):**
 
-**For manual setup:**
-- Node.js v16 or higher
-- npm v8 or higher
-- MongoDB v4.4 or higher (local installation or MongoDB Atlas account)
-- Git for version control
+- Docker ≥ 20.10
+- Docker Compose ≥ 2.0
+- Git
 
-### Quick Start with Docker (Recommended)
+**Manual setup:**
 
-The easiest way to run the application is using Docker Compose, which sets up all services with a single command.
+- Node.js ≥ 24
+- npm ≥ 10
+- MongoDB ≥ 6 (local) or a MongoDB Atlas account
+- Git
 
-1. Clone the repository
-```bash
-git clone https://github.com/Darlington6/exam_prep.git
-cd exam_prep
-```
+---
 
-2. Create backend environment file
+### Quick Start with Docker Compose (Recommended)
 
-Create a `.env` file in the `backend` directory:
-```bash
-PORT=5001
-MONGO_URI=mongodb://mongo:27017/exam_prep_db
-JWT_SECRET=your-super-secret-key-change-in-production
-JWT_EXPIRES_IN=7d
-```
+1. **Clone the repository**
 
-3. Start all services with Docker Compose
-```bash
-docker-compose up --build
-```
+   ```bash
+   git clone https://github.com/Darlington6/exam_prep.git
+   cd exam_prep
+   ```
 
-This command will:
-- Build the backend and frontend Docker images
-- Start MongoDB database container
-- Start the backend API on port 5001
-- Start the frontend on port 3000
-- Set up networking between all services
-- Create persistent volume for MongoDB data
+2. **Create the backend environment file**
 
-4. Access the application
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5001
-- MongoDB: localhost:27017
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
 
-To stop all services:
-```bash
-docker-compose down
-```
+   Then edit `backend/.env`:
 
-To stop and remove all data (including database):
-```bash
-docker-compose down -v
-```
+   ```dotenv
+   PORT=5001
+   MONGO_URI=mongodb://mongo:27017/exam_prep_db
+   JWT_SECRET=your-super-secret-key-change-in-production
+   JWT_EXPIRES_IN=7d
+   ```
+
+   > **Note:** When running with Docker Compose the MongoDB host must be `mongo` (the service name), not `localhost`.
+
+3. **Start all services**
+
+   ```bash
+   docker-compose up --build
+   ```
+
+   This will:
+   - Build the backend (Node.js) and frontend (Nginx) Docker images
+   - Start a MongoDB 6 container with a persistent volume
+   - Start the backend API on **port 5001**
+   - Start the frontend on **port 3000**
+   - Wire networking between all services automatically
+
+4. **Access the application**
+   | Service | URL |
+   |---------|-----|
+   | Frontend | http://localhost:3000 |
+   | Backend API | http://localhost:5001 |
+   | MongoDB | localhost:27017 |
+
+5. **Stop services**
+   ```bash
+   docker-compose down        # stop containers, keep data
+   docker-compose down -v     # stop containers and delete database volume
+   ```
+
+---
 
 ### Manual Installation (Alternative)
 
-If you prefer to run the application without Docker:
+1. **Clone the repository**
 
-1. Clone the repository
-```bash
-git clone https://github.com/Darlington6/exam_prep.git
-cd exam_prep
-```
+   ```bash
+   git clone https://github.com/Darlington6/exam_prep.git
+   cd exam_prep
+   ```
 
-2. Set up the Backend
+2. **Backend**
+
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env
+   ```
+
+   Edit `backend/.env`:
+
+   ```dotenv
+   PORT=5001
+   MONGO_URI=mongodb://localhost:27017/exam_prep_db
+   JWT_SECRET=your-super-secret-key-change-in-production
+   JWT_EXPIRES_IN=7d
+   ```
+
+3. **Frontend**
+
+   ```bash
+   cd ../frontend
+   npm install
+   cp .env.example .env
+   ```
+
+   Edit `frontend/.env`:
+
+   ```dotenv
+   VITE_API_URL=http://localhost:5001
+   ```
+
+4. **Run the application** (in separate terminals)
+
+   ```bash
+   # Terminal 1 — start MongoDB (if local)
+   mongod
+
+   # Terminal 2 — backend
+   cd backend
+   npm run dev or node server.js
+
+   # Terminal 3 — frontend
+   cd frontend
+   npm run dev
+   ```
+
+5. **Access the application**
+   | Service | URL |
+   |---------|-----|
+   | Frontend (Vite dev server) | http://localhost:5173 |
+   | Backend API | http://localhost:5001 |
+
+---
+
+### Creating an Admin User
+
+1. Register a regular account through the app.
+2. Promote the account to admin:
+   ```bash
+   cd backend
+   node scripts/make-admin.js your-email@example.com
+   ```
+3. Refresh your browser page or log out and log back in so the new JWT includes the `admin` role.
+
+---
+
+## Running Tests
+
+### Backend Tests
+
+The backend has **40 test cases** across three test suites using Jest and an in-memory MongoDB instance (no external database required):
+
 ```bash
 cd backend
-npm install
+npm test
 ```
 
-Create a `.env` file in the backend directory:
-```bash
-cp .env.example .env
-```
+| Suite        | Tests | Coverage                                           |
+| ------------ | ----- | -------------------------------------------------- |
+| Auth routes  | 11    | Register, login, token validation                  |
+| Exam routes  | 15    | Browse, take exams, auto-grading, attempts         |
+| Admin routes | 13    | CRUD exams/questions, authorization, toggle active |
 
-Edit the `.env` file with your configuration:
-```
-PORT=5001
-MONGO_URI=mongodb://localhost:27017/exam_prep_db
-JWT_SECRET=your-super-secret-key-change-in-production
-JWT_EXPIRES_IN=7d
-```
+### Frontend Lint
 
-Set up the Frontend:
-```bash
-cd ../frontend
-npm install
-```
-
-Create a `.env` file in the frontend directory:
-```bash
-cp .env.example .env
-```
-
-Edit the `.env` file:
-```
-<!--  -->
-
-3. Run the application
-
-Start MongoDB (if running locally):
-```bash
-mongod
-```
-
-In separate terminal windows:
-
-Backend:
-```bash
-cd backend
-npm run dev
-```
-
-Frontend:
 ```bash
 cd frontend
-npm run dev
+npm run lint
 ```
 
-### Usage
+---
 
-**With Docker:**
-1. Ensure Docker Compose is running: `docker-compose up`
-2. Open your browser and navigate to `http://localhost:3000`
-3. Click "Register" to create a new account
-4. After registration, you'll be automatically logged in
+## Dockerization
 
-**Without Docker:**
-1. Ensure MongoDB is running
-2. Start the backend: `cd backend && npm run dev`
-3. Start the frontend: `cd frontend && npm run dev`
-4. Open your browser and navigate to `http://localhost:5173`
-5. Click "Register" to create a new account
-6. After registration, you'll be automatically logged in
+### Backend Dockerfile (`backend/Dockerfile`)
 
-The authentication feature is the only one implemented for this phase. Other features will be added later.
+- **Base image:** `node:24-alpine`
+- Installs production dependencies only (`--omit=dev`)
+- Runs as a non-root user for security
+- Exposes port **5001**
+
+### Frontend Dockerfile (`frontend/Dockerfile`)
+
+- **Multi-stage build:**
+  - _Stage 1 (builder):_ `node:24-alpine` — installs dependencies, runs `npm run build`
+  - _Stage 2 (production):_ `nginx:alpine` — serves the built static files
+- Exposes port **80**
+
+### Docker Compose (`docker-compose.yml`)
+
+Orchestrates three services:
+
+| Service    | Image                   | Port      |
+| ---------- | ----------------------- | --------- |
+| `backend`  | Built from `./backend`  | 5001      |
+| `frontend` | Built from `./frontend` | 3000 -> 80|
+| `mongo`    | `mongo:6`               | 27017     |
+
+A named volume `mongo-data` provides persistent database storage.
+
+---
+
+## CI/CD Pipeline
+
+The project uses **GitHub Actions** for continuous integration (`.github/workflows/ci.yml`).
+
+### Trigger Conditions
+
+- **Push** to any branch except `main`
+- **Pull request** targeting `main`
+- **Manual dispatch** via the Actions tab
+
+### Pipeline Steps
+
+| Step                            | Description                                |
+| ------------------------------- | ------------------------------------------ |
+| Checkout repository             | `actions/checkout@v3`                      |
+| Setup Node 24                   | `actions/setup-node@v3`                    |
+| Install backend dependencies    | `npm install`                              |
+| **Run backend tests**           | `npm test` (Jest + MongoMemoryServer)      |
+| Install frontend dependencies   | `npm install`                              |
+| **Run frontend lint**           | `npm run lint` (ESLint)                    |
+| **Build frontend**              | `npm run build` (TypeScript + Vite)        |
+| **Build backend Docker image**  | `docker build -t exam_backend ./backend`   |
+| **Build frontend Docker image** | `docker build -t exam_frontend ./frontend` |
+
+All checks must pass before a pull request can be merged to `main`.
+
+---
+
+## API Endpoints
+
+### Authentication (`/api/auth`)
+
+| Method | Endpoint    | Description              | Auth |
+| ------ | ----------- | ------------------------ | ---- |
+| POST   | `/register` | Create a new account     | No   |
+| POST   | `/login`    | Login and receive JWT    | No   |
+| GET    | `/me`       | Get current user profile | Yes  |
+
+### Student Exams (`/api/exams`)
+
+| Method | Endpoint              | Description                    | Auth |
+| ------ | --------------------- | ------------------------------ | ---- |
+| GET    | `/category/:category` | List active exams by category  | Yes  |
+| GET    | `/:id`                | Get a single exam              | Yes  |
+| GET    | `/:examId/questions`  | Get questions (answers hidden) | Yes  |
+| POST   | `/:examId/submit`     | Submit answers and get graded  | Yes  |
+| GET    | `/attempts`           | Get current user's attempts    | Yes  |
+
+### Admin (`/api/admin`) — requires admin role
+
+| Method | Endpoint                   | Description                         |
+| ------ | -------------------------- | ----------------------------------- |
+| GET    | `/exams`                   | List all exams (including inactive) |
+| GET    | `/exams/:id`               | Get a single exam                   |
+| POST   | `/exams`                   | Create an exam                      |
+| PUT    | `/exams/:id`               | Update an exam                      |
+| DELETE | `/exams/:id`               | Delete exam and its questions       |
+| PATCH  | `/exams/:id/toggle-active` | Toggle exam active status           |
+| GET    | `/exams/:examId/questions` | List questions for an exam          |
+| GET    | `/questions/:id`           | Get a single question               |
+| POST   | `/questions`               | Create a question                   |
+| PUT    | `/questions/:id`           | Update a question                   |
+| DELETE | `/questions/:id`           | Delete a question                   |
+| POST   | `/external/fetch`          | Fetch exams from external API       |
+
+---
 
 ## Project Structure
 
 ```
 exam_prep/
-├── .github/                    # GitHub configuration
-│   └── ISSUE_TEMPLATE/        # Issue templates
-├── .gitignore                 # Git ignore rules
-├── docker-compose.yml         # Docker Compose orchestration
-├── LICENSE                    # MIT License
-├── README.md                  # Project documentation
+├── .github/
+│   ├── CODEOWNERS                  # Code ownership rules
+│   ├── pull_request_template.md    # PR template
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug-report.yml
+│   │   ├── config.yml
+│   │   ├── devops.yml
+│   │   ├── epic.yml
+│   │   ├── spike.yml
+│   │   ├── task.yml
+│   │   └── user-story.yml
+│   └── workflows/
+│       └── ci.yml                  # GitHub Actions CI pipeline
 │
-├── backend/                    # Node.js/Express backend
-│   ├── .dockerignore          # Docker ignore rules for backend
-│   ├── .env.example           # Environment variables template
-│   ├── Dockerfile             # Backend container configuration
-│   ├── package.json           # Backend dependencies
-│   ├── server.js              # Entry point, Express app setup
+├── backend/
+│   ├── .dockerignore
+│   ├── .env.example                # Environment variables template
+│   ├── Dockerfile                  # Backend container (Node 24 Alpine)
+│   ├── package.json
+│   ├── server.js                   # Express app entry point
+│   ├── __tests__/
+│   │   ├── setup.js                # MongoMemoryServer test setup
+│   │   ├── auth.test.js            # Auth route tests (11 cases)
+│   │   ├── exams.test.js           # Student exam route tests (15 cases)
+│   │   ├── admin.test.js           # Admin route tests (13 cases)
+│   │   └── sample.test.js          # Smoke test
 │   ├── middleware/
-│   │   └── auth.js            # Authentication middleware
+│   │   ├── auth.js                 # JWT authentication middleware
+│   │   └── admin.js                # Admin role authorization middleware
 │   ├── models/
-│   │   └── User.js            # Mongoose User schema
-│   └── routes/
-│       └── auth.js            # Authentication routes
+│   │   ├── User.js                 # User schema (name, email, password, role)
+│   │   ├── Exam.js                 # Exam schema (title, category, difficulty, duration)
+│   │   ├── Question.js             # Question schema (options, correct answer, explanation)
+│   │   └── ExamAttempt.js          # Attempt schema (score, answers, passed)
+│   ├── routes/
+│   │   ├── auth.js                 # Register, login, profile routes
+│   │   ├── exams.js                # Student exam routes (browse, take, submit)
+│   │   └── admin.js                # Admin CRUD routes (exams, questions, external fetch)
+│   └── scripts/
+│       └── make-admin.js           # CLI utility to promote a user to admin
 │
-└── frontend/                   # React/TypeScript frontend
-    ├── .dockerignore          # Docker ignore rules for frontend
-    ├── .env.example           # Environment variables template
-    ├── .gitignore             # Frontend-specific ignore rules
-    ├── Dockerfile             # Frontend container configuration
-    ├── index.html             # HTML entry point
-    ├── package.json           # Frontend dependencies
-    ├── vite.config.ts         # Vite configuration
-    ├── tsconfig.json          # TypeScript configuration
-    ├── tsconfig.app.json      # TypeScript app configuration
-    ├── tsconfig.node.json     # TypeScript node configuration
-    ├── eslint.config.js       # ESLint configuration
-    ├── README.md              # Frontend-specific documentation
-    ├── public/                # Static assets
-    │   └── vite.svg           # Vite logo
-    └── src/
-        ├── main.tsx           # React entry point
-        ├── App.tsx            # Main App component with routing
-        ├── App.css            # Global styles
-        ├── index.css          # Base styles
-        ├── api/
-        │   └── client.ts      # Axios client with interceptors
-        ├── assets/
-        │   └── react.svg      # React logo
-        ├── components/
-        │   └── ProtectedRoute.tsx  # Route protection
-        ├── contexts/
-        │   └── AuthContext.tsx     # Authentication context
-        └── pages/
-            ├── Home.tsx       # Landing page
-            ├── Login.tsx      # Login page
-            └── Register.tsx   # Registration page
+├── frontend/
+│   ├── .dockerignore
+│   ├── .env.example                # Environment variables template
+│   ├── .gitignore
+│   ├── Dockerfile                  # Multi-stage build (Node → Nginx)
+│   ├── index.html                  # HTML entry point
+│   ├── package.json
+│   ├── vite.config.ts              # Vite configuration
+│   ├── tsconfig.json               # TypeScript configuration
+│   ├── tsconfig.app.json
+│   ├── tsconfig.node.json
+│   ├── eslint.config.js            # ESLint configuration
+│   ├── public/
+│   │   └── vite.svg
+│   └── src/
+│       ├── main.tsx                # React entry point
+│       ├── App.tsx                 # Root component with routing
+│       ├── App.css
+│       ├── index.css
+│       ├── api/
+│       │   └── client.ts           # Axios API client with auth interceptors
+│       ├── assets/
+│       │   └── react.svg
+│       ├── components/
+│       │   ├── ProtectedRoute.tsx   # Auth-guarded route wrapper
+│       │   └── admin/
+│       │       ├── ExamForm.tsx     # Create/edit exam form
+│       │       ├── ExamList.tsx     # Admin exam listing
+│       │       ├── ExternalAPIFetch.tsx  # Fetch exams from external APIs
+│       │       ├── QuestionForm.tsx # Create/edit question form
+│       │       └── QuestionManager.tsx  # Question CRUD manager
+│       ├── contexts/
+│       │   ├── AuthContext.tsx      # Auth provider (login, register, logout, state)
+│       │   └── useAuth.ts          # useAuth hook
+│       ├── pages/
+│       │   ├── Home.tsx            # Landing page with navigation
+│       │   ├── Login.tsx           # Login page
+│       │   ├── Register.tsx        # Registration page
+│       │   ├── Dashboard.tsx       # Student dashboard
+│       │   ├── ExamCategories.tsx  # Browse exam categories
+│       │   ├── ExamSelection.tsx   # Select an exam within a category
+│       │   ├── ExamTaking.tsx      # Take an exam (timed)
+│       │   ├── ExamResults.tsx     # View exam results
+│       │   └── AdminDashboard.tsx  # Admin panel
+│       └── styles/
+│           ├── AdminDashboard.css
+│           ├── Dashboard.css
+│           ├── ExamCategories.css
+│           ├── ExamForm.css
+│           ├── ExamList.css
+│           ├── ExamResults.css
+│           ├── ExamSelection.css
+│           ├── ExamTaking.css
+│           ├── ExternalAPIFetch.css
+│           ├── QuestionForm.css
+│           └── QuestionManager.css
+│
+├── docker-compose.yml              # Orchestrates backend, frontend, MongoDB
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
-
-## Links
-
 
 ## License
 

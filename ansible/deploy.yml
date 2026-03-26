@@ -1,0 +1,135 @@
+
+# Play 1: Configure the App VM
+# Installs Docker + Docker Compose, pulls images from ACR, and runs the app
+# via docker compose. Targets the [app] group in the inventory.
+- name: Deploy Application to Production
+  hosts: app
+  become: true
+
+  vars:
+    # All vars are injected at runtime via --extra-vars in the CD pipeline
+    acr_login_server: ""
+    acr_username: ""
+    acr_password: ""
+    mongo_uri: ""
+    jwt_secret: ""
+    app_dir: /opt/exam-prep
+
+  tasks:
+
+    - name: Install Docker, Docker Compose plugin, and pip docker SDK
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin  # enables "docker compose" (v2 plugin)
+          - python3-docker          # needed for Ansible docker modules
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add admin user to docker group (avoids needing sudo for docker)
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy production docker-compose file to VM
+      copy:
+        src: ../docker-compose.prod.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: "0644"
+
+    - name: Write .env file with production secrets
+      copy:
+        content: |
+          MONGO_URI={{ mongo_uri }}
+          JWT_SECRET={{ jwt_secret }}
+          ACR_LOGIN_SERVER={{ acr_login_server }}
+        dest: "{{ app_dir }}/.env"
+        mode: "0600" # restrict read to owner only — contains secrets
+
+    - name: Log in to Azure Container Registry
+      command: >
+        docker login {{ acr_login_server }}
+        -u {{ acr_username }}
+        -p {{ acr_password }}
+
+    - name: Pull latest images and start services with Docker Compose
+      command: docker compose -f {{ app_dir }}/docker-compose.yml up -d --pull always
+      args:
+        chdir: "{{ app_dir }}"
+
+# Play 2: Configure the Bastion Host as an nginx reverse proxy
+# Routes public HTTP traffic to the app VM in the private subnet.
+# Targets the [bastion] group in the inventory.
+- name: Configure Bastion as Nginx Reverse Proxy
+  hosts: bastion
+  become: true
+
+  vars:
+    vm_private_ip: "" # injected via --extra-vars
+
+  tasks:
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Write nginx reverse proxy config
+      # Routes:
+      #   /api  -> backend container on app VM (port 5001)
+      #   /     -> frontend container on app VM (port 3000)
+      copy:
+        content: |
+          server {
+              listen 80;
+
+              location /api {
+                  proxy_pass http://{{ vm_private_ip }}:5001;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+
+              location / {
+                  proxy_pass http://{{ vm_private_ip }}:3000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+          }
+        dest: /etc/nginx/sites-available/exam-prep
+        mode: "0644"
+
+    - name: Enable exam-prep nginx site
+      file:
+        src: /etc/nginx/sites-available/exam-prep
+        dest: /etc/nginx/sites-enabled/exam-prep
+        state: link
+
+    - name: Remove default nginx site to avoid port conflicts
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Validate nginx configuration
+      command: nginx -t
+
+    - name: Start and enable nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: true

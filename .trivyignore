@@ -1,4 +1,3 @@
-# .trivyignore
 # Explicitly accepted vulnerabilities that cannot be fixed by this project.
 # Each entry is documented with the reason so this file is auditable.
 # Review and remove entries as new base images / upstream packages are released.

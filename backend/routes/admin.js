@@ -1,296 +1,454 @@
 const express = require('express');
-const router = express.Router();
+const { auth } = require('../middleware/auth');
+const admin = require('../middleware/admin');
 const Exam = require('../models/Exam');
 const Question = require('../models/Question');
-const { auth } = require('../middleware/auth');
 
-// ── Admin auth guard ──────────────────────────────────────────────────────────
-function requireAdmin(req, res, next) {
-  if (!req.user) return res.status(401).json({ message: 'Authentication required.' });
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required.' });
-  next();
-}
+const router = express.Router();
 
-router.use(auth, requireAdmin);
+// All admin routes require authentication + admin role
+router.use(auth, admin);
 
-// ── Exam management ───────────────────────────────────────────────────────────
+// ─── EXAM CRUD ───────────────────────────────────────────────
 
-// GET /api/admin/exams
+// GET /api/admin/exams — list all exams (including inactive)
 router.get('/exams', async (req, res) => {
   try {
-    const exams = await Exam.find().sort({ createdAt: -1 });
+    const exams = await Exam.find()
+      .sort({ createdAt: -1 })
+      .populate('createdBy', 'name email');
     res.json({ exams });
   } catch (err) {
-    console.error('Admin get exams error:', err.message);
-    res.status(500).json({ message: 'Failed to load exams.' });
+    console.error('Admin get exams error:', err);
+    res.status(500).json({ message: 'Failed to fetch exams.' });
   }
 });
 
-// GET /api/admin/exams/:id  (must come before /:examId/questions)
+// GET /api/admin/exams/:id — get a single exam
 router.get('/exams/:id', async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.id);
-    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+    const exam = await Exam.findById(req.params.id).populate('createdBy', 'name email');
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found.' });
+    }
     res.json({ exam });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to load exam.' });
+    console.error('Admin get exam error:', err);
+    res.status(500).json({ message: 'Failed to fetch exam.' });
   }
 });
 
-// POST /api/admin/exams
+// POST /api/admin/exams — create a new exam
 router.post('/exams', async (req, res) => {
   try {
     const { title, description, category, difficulty, duration, passingScore } = req.body;
-    if (!title || !category || !difficulty || !duration || passingScore === undefined) {
-      return res.status(400).json({
-        message: 'title, category, difficulty, duration, and passingScore are required.',
-      });
+
+    if (!title || !description || !category || !duration || passingScore === undefined) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
+
     const exam = await Exam.create({
-      title: String(title).trim(),
-      description: description ? String(description).trim() : '',
-      category: String(category).trim(),
-      difficulty,
-      duration: Number(duration),
-      passingScore: Number(passingScore),
+      title,
+      description,
+      category: category.toLowerCase(),
+      difficulty: difficulty || 'medium',
+      duration,
+      passingScore,
       createdBy: req.user._id,
     });
+
     res.status(201).json({ exam });
   } catch (err) {
-    console.error('Admin create exam error:', err.message);
+    console.error('Admin create exam error:', err);
     if (err.name === 'ValidationError') {
-      return res.status(400).json({ message: err.message });
+      const msg = Object.values(err.errors).map((e) => e.message).join(' ');
+      return res.status(400).json({ message: msg });
     }
     res.status(500).json({ message: 'Failed to create exam.' });
   }
 });
 
-// PUT /api/admin/exams/:id
+// PUT /api/admin/exams/:id — update an exam
 router.put('/exams/:id', async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.id);
-    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+    const updates = {};
+    const allowed = ['title', 'description', 'category', 'difficulty', 'duration', 'passingScore'];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        updates[key] = key === 'category' ? req.body[key].toLowerCase() : req.body[key];
+      }
+    }
 
-    const { title, description, category, difficulty, duration, passingScore } = req.body;
-    if (title !== undefined) exam.title = String(title).trim();
-    if (description !== undefined) exam.description = String(description).trim();
-    if (category !== undefined) exam.category = String(category).trim();
-    if (difficulty !== undefined) exam.difficulty = difficulty;
-    if (duration !== undefined) exam.duration = Number(duration);
-    if (passingScore !== undefined) exam.passingScore = Number(passingScore);
-    await exam.save();
+    const exam = await Exam.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found.' });
+    }
+
     res.json({ exam });
   } catch (err) {
-    console.error('Admin update exam error:', err.message);
+    console.error('Admin update exam error:', err);
+    if (err.name === 'ValidationError') {
+      const msg = Object.values(err.errors).map((e) => e.message).join(' ');
+      return res.status(400).json({ message: msg });
+    }
     res.status(500).json({ message: 'Failed to update exam.' });
   }
 });
 
-// DELETE /api/admin/exams/:id
+// DELETE /api/admin/exams/:id — delete an exam and its questions
 router.delete('/exams/:id', async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.id);
-    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+    const exam = await Exam.findByIdAndDelete(req.params.id);
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found.' });
+    }
+
+    // Also remove all associated questions
     await Question.deleteMany({ examId: req.params.id });
-    await exam.deleteOne();
-    res.json({ message: 'Exam deleted.' });
+
+    res.json({ message: 'Exam and associated questions deleted.' });
   } catch (err) {
-    console.error('Admin delete exam error:', err.message);
+    console.error('Admin delete exam error:', err);
     res.status(500).json({ message: 'Failed to delete exam.' });
   }
 });
 
-// PATCH /api/admin/exams/:id/toggle-active
+// PATCH /api/admin/exams/:id/toggle-active — toggle exam active status
 router.patch('/exams/:id/toggle-active', async (req, res) => {
   try {
     const exam = await Exam.findById(req.params.id);
-    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found.' });
+    }
+
     exam.isActive = !exam.isActive;
     await exam.save();
+
     res.json({ exam });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update exam status.' });
+    console.error('Admin toggle active error:', err);
+    res.status(500).json({ message: 'Failed to toggle exam status.' });
   }
 });
 
-// GET /api/admin/exams/:examId/questions
+// ─── QUESTION CRUD ───────────────────────────────────────────
+
+// GET /api/admin/exams/:examId/questions — list questions for an exam
 router.get('/exams/:examId/questions', async (req, res) => {
   try {
     const questions = await Question.find({ examId: req.params.examId })
-      .sort({ order: 1, createdAt: 1 });
+      .sort({ order: 1 })
+      .populate('createdBy', 'name email');
     res.json({ questions });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to load questions.' });
+    console.error('Admin get questions error:', err);
+    res.status(500).json({ message: 'Failed to fetch questions.' });
   }
 });
 
-// ── Question management ───────────────────────────────────────────────────────
-
-// GET /api/admin/questions/:id
+// GET /api/admin/questions/:id — get a single question
 router.get('/questions/:id', async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id);
-    if (!question) return res.status(404).json({ message: 'Question not found.' });
+    const question = await Question.findById(req.params.id).populate('createdBy', 'name email');
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
     res.json({ question });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to load question.' });
+    console.error('Admin get question error:', err);
+    res.status(500).json({ message: 'Failed to fetch question.' });
   }
 });
 
-// POST /api/admin/questions
+// POST /api/admin/questions — create a question
 router.post('/questions', async (req, res) => {
   try {
     const { examId, questionText, options, explanation, points, order } = req.body;
-    if (!examId || !questionText || !Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({
-        message: 'examId, questionText, and at least 2 options are required.',
-      });
+
+    if (!examId || !questionText || !options) {
+      return res.status(400).json({ message: 'examId, questionText, and options are required.' });
     }
+
+    // Validate exam exists
     const exam = await Exam.findById(examId);
-    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
-    if (!options.some((o) => o.isCorrect)) {
-      return res.status(400).json({
-        message: 'At least one option must be marked as correct.',
-      });
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found.' });
     }
+
+    // Validate at least one correct option
+    const hasCorrect = options.some((opt) => opt.isCorrect);
+    if (!hasCorrect) {
+      return res.status(400).json({ message: 'At least one option must be marked as correct.' });
+    }
+
     const question = await Question.create({
       examId,
-      questionText: String(questionText).trim(),
+      questionText,
       options,
-      explanation: explanation ? String(explanation).trim() : '',
-      points: points ? Number(points) : 1,
-      order: order !== undefined ? Number(order) : 0,
+      explanation: explanation || '',
+      points: points || 1,
+      order: order !== undefined ? order : 0,
       createdBy: req.user._id,
     });
+
     res.status(201).json({ question });
   } catch (err) {
-    console.error('Admin create question error:', err.message);
+    console.error('Admin create question error:', err);
     if (err.name === 'ValidationError') {
-      return res.status(400).json({ message: err.message });
+      const msg = Object.values(err.errors).map((e) => e.message).join(' ');
+      return res.status(400).json({ message: msg });
     }
     res.status(500).json({ message: 'Failed to create question.' });
   }
 });
 
-// PUT /api/admin/questions/:id
+// PUT /api/admin/questions/:id — update a question
 router.put('/questions/:id', async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id);
-    if (!question) return res.status(404).json({ message: 'Question not found.' });
-
-    const { questionText, options, explanation, points, order } = req.body;
-    if (questionText !== undefined) question.questionText = String(questionText).trim();
-    if (options !== undefined) {
-      if (!Array.isArray(options) || options.length < 2) {
-        return res.status(400).json({ message: 'At least 2 options are required.' });
+    const updates = {};
+    const allowed = ['questionText', 'options', 'explanation', 'points', 'order'];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        updates[key] = req.body[key];
       }
-      if (!options.some((o) => o.isCorrect)) {
-        return res.status(400).json({
-          message: 'At least one option must be marked as correct.',
-        });
-      }
-      question.options = options;
     }
-    if (explanation !== undefined) question.explanation = String(explanation).trim();
-    if (points !== undefined) question.points = Number(points);
-    if (order !== undefined) question.order = Number(order);
-    await question.save();
+
+    // If options are being updated, validate at least one correct
+    if (updates.options) {
+      const hasCorrect = updates.options.some((opt) => opt.isCorrect);
+      if (!hasCorrect) {
+        return res.status(400).json({ message: 'At least one option must be marked as correct.' });
+      }
+    }
+
+    const question = await Question.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
+
     res.json({ question });
   } catch (err) {
-    console.error('Admin update question error:', err.message);
+    console.error('Admin update question error:', err);
+    if (err.name === 'ValidationError') {
+      const msg = Object.values(err.errors).map((e) => e.message).join(' ');
+      return res.status(400).json({ message: msg });
+    }
     res.status(500).json({ message: 'Failed to update question.' });
   }
 });
 
-// DELETE /api/admin/questions/:id
+// DELETE /api/admin/questions/:id — delete a question
 router.delete('/questions/:id', async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id);
-    if (!question) return res.status(404).json({ message: 'Question not found.' });
-    await question.deleteOne();
+    const question = await Question.findByIdAndDelete(req.params.id);
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
     res.json({ message: 'Question deleted.' });
   } catch (err) {
+    console.error('Admin delete question error:', err);
     res.status(500).json({ message: 'Failed to delete question.' });
   }
 });
 
-// ── External API fetch ────────────────────────────────────────────────────────
+// ─── EXTERNAL FETCH ──────────────────────────────────────────
 
-// POST /api/admin/external/fetch
+// POST /api/admin/external/fetch — fetch exams from an external API
 router.post('/external/fetch', async (req, res) => {
   try {
-    const { apiUrl, category, limit = 10 } = req.body;
-    if (!apiUrl || typeof apiUrl !== 'string') {
+    const { apiUrl, category, limit } = req.body;
+
+    if (!apiUrl) {
       return res.status(400).json({ message: 'apiUrl is required.' });
     }
 
-    // Basic SSRF protection — block private/loopback addresses
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(apiUrl.trim());
-    } catch {
-      return res.status(400).json({ message: 'Invalid API URL.' });
-    }
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      return res.status(400).json({ message: 'Only HTTP and HTTPS URLs are allowed.' });
-    }
-    const hostname = parsedUrl.hostname.toLowerCase();
-    if (
-      hostname === 'localhost' ||
-      /^127\./.test(hostname) ||
-      /^10\./.test(hostname) ||
-      /^192\.168\./.test(hostname) ||
-      /^172\.(1[6-9]|2[0-9]|3[01])\./.test(hostname) ||
-      hostname === '0.0.0.0'
-    ) {
-      return res.status(400).json({ message: 'Requests to private addresses are not allowed.' });
+    // Dynamic import for fetch (Node 18+ has global fetch)
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      return res.status(502).json({ message: `External API returned ${response.status}.` });
     }
 
-    const httpLib = parsedUrl.protocol === 'https:' ? require('https') : require('http');
-    const raw = await new Promise((resolve, reject) => {
-      const req = httpLib.get(apiUrl.trim(), { timeout: 10000 }, (response) => {
-        let body = '';
-        response.on('data', (chunk) => { body += chunk; });
-        response.on('end', () => {
-          try { resolve(JSON.parse(body)); } catch {
-            reject(new Error('External API did not return valid JSON.'));
-          }
-        });
-      });
-      req.on('error', reject);
-      req.on('timeout', () => { req.destroy(); reject(new Error('External API request timed out.')); });
-    });
+    const externalData = await response.json();
 
-    const items = Array.isArray(raw)
-      ? raw
-      : raw.exams || raw.results || raw.data || [];
+    // Normalize common external API shapes into { exams, questions }
+    const normalize = (data) => {
+      let exams = [];
+      let questions = [];
 
-    const savedExams = [];
-    const savedQuestions = [];
-
-    for (const item of items.slice(0, Math.max(1, Number(limit) || 10))) {
-      try {
-        if (item.title && item.difficulty) {
-          const exam = await Exam.create({
-            title: String(item.title).trim(),
-            description: item.description ? String(item.description).trim() : '',
-            category: category || item.category || 'general',
-            difficulty: ['easy', 'medium', 'hard'].includes(item.difficulty)
-              ? item.difficulty
-              : 'medium',
-            duration: Number(item.duration) || 30,
-            passingScore: Number(item.passingScore) || 60,
-            createdBy: req.user._id,
-          });
-          savedExams.push(exam);
+      const classifyItem = (item) => {
+        if (!item || typeof item !== 'object') return;
+        if ('questionText' in item || 'options' in item || 'answers' in item) {
+          questions.push(item);
+        } else if ('title' in item || 'description' in item || 'category' in item) {
+          exams.push(item);
+        } else if (Array.isArray(item.options) && item.options.length) {
+          questions.push(item);
+        } else {
+          exams.push(item);
         }
-      } catch { /* skip malformed items */ }
+      };
+
+      const pushList = (list) => {
+        if (!Array.isArray(list)) return;
+        for (const it of list) classifyItem(it);
+      };
+
+      // Common shapes: array root, { exams: [], questions: [] }, { data: [] }, { items: [] }
+      if (Array.isArray(data)) {
+        pushList(data);
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.exams) || Array.isArray(data.questions)) {
+          if (Array.isArray(data.exams)) pushList(data.exams);
+          if (Array.isArray(data.questions)) pushList(data.questions);
+        } else if (Array.isArray(data.data) || Array.isArray(data.items)) {
+          pushList(data.data || data.items);
+        } else {
+          // Try any top-level array properties
+          for (const key of Object.keys(data)) {
+            if (Array.isArray(data[key])) pushList(data[key]);
+          }
+        }
+      }
+
+      // Apply limit to exams (limit parameter is intended to cap number of exams)
+      if (typeof limit === 'number' && limit > 0) exams = exams.slice(0, limit);
+
+      // Ensure arrays are returned (never undefined)
+      return { exams, questions };
+    };
+
+    const { exams, questions } = normalize(externalData || {});
+
+    // If exams contain nested questions, extract them and attach to the parent exam
+    for (const ex of exams) {
+      if (ex && Array.isArray(ex.questions) && ex.questions.length) {
+        ex._externalQuestions = ex.questions;
+      }
     }
 
-    res.json({ exams: savedExams, questions: savedQuestions });
+    const createdExams = [];
+    const createdQuestions = [];
+    const warnings = [];
+
+    // Helper to sanitize options into { text, isCorrect }
+    const sanitizeOptions = (opts) => {
+      if (!Array.isArray(opts)) return [];
+      // If options are strings, convert to objects
+      if (opts.length && typeof opts[0] === 'string') {
+        return opts.map((t) => ({ text: String(t), isCorrect: false }));
+      }
+      return opts.map((o) => ({ text: String(o.text || o.label || ''), isCorrect: !!o.isCorrect }));
+    };
+
+    // Persist exams and their nested questions (if any)
+    for (const extExam of exams) {
+      try {
+        const title = extExam.title || extExam.name || 'Untitled Exam';
+        const description = extExam.description || extExam.summary || '';
+        const categoryVal = (category || extExam.category || 'general').toLowerCase();
+        const difficulty = ['easy', 'medium', 'hard'].includes((extExam.difficulty || '').toLowerCase())
+          ? extExam.difficulty.toLowerCase()
+          : 'medium';
+        const duration = Number(extExam.duration) || 30;
+        const passingScore = Number(extExam.passingScore) || 50;
+
+        const examDoc = await Exam.create({
+          title,
+          description,
+          category: categoryVal,
+          difficulty,
+          duration,
+          passingScore,
+          createdBy: req.user._id,
+        });
+
+        createdExams.push(examDoc);
+
+        // Persist nested questions if present
+        const nested = extExam._externalQuestions || [];
+        for (const q of nested) {
+          try {
+            const options = sanitizeOptions(q.options || q.answers || q.choices || []);
+            const filtered = options.filter((o) => o.text && o.text.trim());
+            const hasCorrect = filtered.some((o) => o.isCorrect);
+            if (filtered.length < 2 || !hasCorrect) {
+              warnings.push(`Skipped question for exam ${title} due to invalid options`);
+              continue;
+            }
+
+            const questionDoc = await Question.create({
+              examId: examDoc._id,
+              questionText: q.questionText || q.text || q.prompt || 'Untitled question',
+              options: filtered,
+              explanation: q.explanation || q.explain || '',
+              points: Number(q.points) || 1,
+              order: Number(q.order) || 0,
+              createdBy: req.user._id,
+            });
+            createdQuestions.push(questionDoc);
+          } catch (qerr) {
+            console.error('Failed to create question:', qerr);
+            warnings.push(`Failed to create a question for exam ${extExam.title || extExam.name}`);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to create exam from external data:', e);
+        warnings.push(`Failed to create exam ${extExam.title || extExam.name}`);
+      }
+    }
+
+    // Try to attach any top-level questions to created exams by matching examTitle or exam field
+    for (const q of questions) {
+      try {
+        let targetExam = null;
+        if (q.examTitle) targetExam = createdExams.find((e) => e.title === q.examTitle || e.title === q.examTitle);
+        if (!targetExam && q.exam) targetExam = createdExams.find((e) => e._id.toString() === String(q.exam) || e.title === q.exam);
+
+        if (!targetExam) {
+          warnings.push('Found an unassigned question; no matching exam found');
+          continue;
+        }
+
+        const options = sanitizeOptions(q.options || q.answers || q.choices || []);
+        const filtered = options.filter((o) => o.text && o.text.trim());
+        const hasCorrect = filtered.some((o) => o.isCorrect);
+        if (filtered.length < 2 || !hasCorrect) {
+          warnings.push(`Skipped question for exam ${targetExam.title} due to invalid options`);
+          continue;
+        }
+
+        const questionDoc = await Question.create({
+          examId: targetExam._id,
+          questionText: q.questionText || q.text || q.prompt || 'Untitled question',
+          options: filtered,
+          explanation: q.explanation || q.explain || '',
+          points: Number(q.points) || 1,
+          order: Number(q.order) || 0,
+          createdBy: req.user._id,
+        });
+        createdQuestions.push(questionDoc);
+      } catch (err) {
+        console.error('Failed to attach top-level question:', err);
+      }
+    }
+
+    res.json({
+      message: 'External data fetched and imported successfully.',
+      exams: createdExams,
+      questions: createdQuestions,
+      warnings,
+    });
   } catch (err) {
-    console.error('External fetch error:', err.message);
-    res.status(500).json({ message: err.message || 'Failed to fetch from external API.' });
+    console.error('External fetch error:', err);
+    res.status(500).json({ message: 'Failed to fetch from external API.' });
   }
 });
 
