@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ['student', 'admin'], default: 'student' },
+    username: { type: String, trim: true, default: '' },
+    avatar: { type: String, default: '' }, // base64 data URL or empty
+    notifications: { type: Boolean, default: true },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
   { timestamps: true }
 );

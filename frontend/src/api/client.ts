@@ -40,6 +40,10 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  username?: string;
+  avatar?: string;
+  notifications?: boolean;
+  createdAt?: string;
 }
 
 export interface Exam {
@@ -145,3 +149,25 @@ export interface ExamAttempt {
   passed: boolean;
   completedAt: string;
 }
+
+export interface ExamHistoryEntry {
+  _id: string;
+  examId: string;
+  examTitle: string;
+  examCategory: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  passed: boolean;
+  completedAt: string;
+}
+
+// User profile & settings API
+export const userApi = {
+  getProfile: () => api.get<{ user: User }>('/user/profile'),
+  updateProfile: (data: { username?: string; avatar?: string }) =>
+    api.put<{ user: User }>('/user/profile', data),
+  getExamHistory: () => api.get<{ history: ExamHistoryEntry[] }>('/user/exam-history'),
+  updateSettings: (data: { notifications?: boolean }) =>
+    api.put<{ settings: { notifications: boolean } }>('/user/settings', data),
+};
