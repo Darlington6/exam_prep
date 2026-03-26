@@ -24,7 +24,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
-      # Backend workflow
+      # Backend
 
       - name: Install Backend Dependencies
         run: |
@@ -36,7 +36,7 @@ jobs:
           cd backend
           npm test
 
-      # Frontend workflow
+      # Frontend
 
       - name: Install Frontend Dependencies
         run: |
