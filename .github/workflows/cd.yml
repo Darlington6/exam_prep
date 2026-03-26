@@ -8,6 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      BASTION_IP: ""
+      MONGO_URI: ""
+      ACR_USERNAME: ""
+      ACR_PASSWORD: ""
 
     steps:
       - name: Checkout code
@@ -79,10 +84,12 @@ jobs:
       - name: Login to ACR
         run: az acr login --name ${{ secrets.ACR_NAME }}
 
-      - name: Fetch ACR credentials from Azure (always fresh after destroy+apply)
+      - name: Fetch live infra values from Azure (self-healing after destroy+apply)
         run: |
           echo "ACR_USERNAME=$(az acr credential show --name ${{ secrets.ACR_NAME }} --query username -o tsv)" >> $GITHUB_ENV
           echo "ACR_PASSWORD=$(az acr credential show --name ${{ secrets.ACR_NAME }} --query 'passwords[0].value' -o tsv)" >> $GITHUB_ENV
+          echo "BASTION_IP=$(az network public-ip show --resource-group ${{ secrets.RESOURCE_GROUP }} --name bastion-ip --query ipAddress -o tsv)" >> $GITHUB_ENV
+          echo "MONGO_URI=$(az cosmosdb keys list --name ${{ secrets.COSMOSDB_ACCOUNT_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --type connection-strings --query 'connectionStrings[0].connectionString' -o tsv)" >> $GITHUB_ENV
 
       # Step 3: Build and Push Production Images to ACR (with commit SHA tags for traceability)
       # Images are tagged with :latest AND the commit SHA for traceability.
@@ -99,7 +106,7 @@ jobs:
       - name: Build and Tag Frontend Image
         run: |
           docker build \
-            --build-arg VITE_API_URL=https://${{ secrets.BASTION_IP }}.sslip.io \
+            --build-arg VITE_API_URL=https://${{ env.BASTION_IP }}.sslip.io \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:latest \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }} \
             ./frontend
@@ -123,7 +130,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           # Add bastion to known_hosts to prevent interactive fingerprint prompt
-          ssh-keyscan -H ${{ secrets.BASTION_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.BASTION_IP }} >> ~/.ssh/known_hosts
 
       - name: Install Ansible
         run: pip install ansible
@@ -134,10 +141,10 @@ jobs:
         run: |
           cat > ansible/inventory.ini << EOF
           [bastion]
-          ${{ secrets.BASTION_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          ${{ env.BASTION_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
           [app]
-          ${{ secrets.VM_PRIVATE_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyJump=${{ secrets.VM_ADMIN_USERNAME }}@${{ secrets.BASTION_IP }} -o StrictHostKeyChecking=no'
+          ${{ secrets.VM_PRIVATE_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyJump=${{ secrets.VM_ADMIN_USERNAME }}@${{ env.BASTION_IP }} -o StrictHostKeyChecking=no'
           EOF
 
       - name: Run Ansible Deployment Playbook
@@ -148,8 +155,8 @@ jobs:
             --extra-vars "acr_login_server=${{ secrets.ACR_NAME }}.azurecr.io \
                 acr_username=${{ env.ACR_USERNAME }} \
                 acr_password=${{ env.ACR_PASSWORD }} \
-                mongo_uri='${{ secrets.MONGO_URI }}' \
+                mongo_uri='${{ env.MONGO_URI }}' \
                 jwt_secret='${{ secrets.JWT_SECRET }}' \
                 vm_private_ip=${{ secrets.VM_PRIVATE_IP }} \
-                domain=${{ secrets.BASTION_IP }}.sslip.io"
+                domain=${{ env.BASTION_IP }}.sslip.io"
                 
