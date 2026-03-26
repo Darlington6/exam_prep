@@ -104,12 +104,16 @@
 
   vars:
     vm_private_ip: "" # injected via --extra-vars
+    domain: ""        # injected via --extra-vars (e.g. 20.164.200.14.sslip.io)
 
   tasks:
 
-    - name: Install nginx
+    - name: Install nginx and certbot
       apt:
-        name: nginx
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
         state: present
         update_cache: yes
 
@@ -121,6 +125,7 @@
         content: |
           server {
               listen 80;
+              server_name {{ domain }};
 
               location /api {
                   proxy_pass http://{{ vm_private_ip }}:5001;
@@ -158,3 +163,12 @@
         name: nginx
         state: restarted
         enabled: true
+
+    - name: Obtain Let's Encrypt certificate and configure HTTPS
+      command: >
+        certbot --nginx -d {{ domain }}
+        --non-interactive --agree-tos
+        --email admin@{{ domain }}
+        --redirect
+      args:
+        creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
