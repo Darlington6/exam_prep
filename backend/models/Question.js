@@ -1,15 +1,8 @@
-/**
- * Question Model
- *
- * Represents a single multiple-choice question belonging to an exam.
- * Each question has 2+ options (with isCorrect flags), an optional
- * explanation, point value, and display order.
- */
 const mongoose = require('mongoose');
 
 const optionSchema = new mongoose.Schema(
   {
-    text: { type: String, required: true, trim: true },
+    text: { type: String, required: true },
     isCorrect: { type: Boolean, required: true, default: false },
   },
   { _id: false }
@@ -21,27 +14,16 @@ const questionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Exam',
       required: true,
+      index: true,
     },
     questionText: { type: String, required: true, trim: true },
-    options: {
-      type: [optionSchema],
-      validate: {
-        validator: (v) => Array.isArray(v) && v.length >= 2,
-        message: 'A question must have at least 2 options.',
-      },
-    },
-    explanation: { type: String, trim: true, default: '' },
+    options: { type: [optionSchema], required: true },
+    explanation: { type: String, default: '' },
     points: { type: Number, default: 1, min: 1 },
     order: { type: Number, default: 0 },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
 );
-
-questionSchema.index({ examId: 1, order: 1 });
 
 module.exports = mongoose.model('Question', questionSchema);
