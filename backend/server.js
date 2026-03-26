@@ -3,6 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const examRoutes = require('./routes/exams');
+const adminRoutes = require('./routes/admin');
+const userRoutes = require('./routes/user');
 
 const app = express();
 
@@ -23,6 +26,9 @@ app.listen(PORT, () => {
 app.get('/', (req, res) => res.send('API ok'));
 app.get('/api/auth/ping', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
 
 // catch-all error handler (must have 4 args so Express treats it as error middleware)
 app.use((err, req, res, _next) => {

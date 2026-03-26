@@ -54,7 +54,7 @@ export function ExamTaking() {
   }, [loadExam]);
 
   useEffect(() => {
-    if (timeRemaining <= 0) return;
+    if (timeRemaining <= 0 || questions.length === 0) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -67,7 +67,7 @@ export function ExamTaking() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining, handleSubmit]);
+  }, [timeRemaining, handleSubmit, questions.length]);
 
   const handleAnswerSelect = (optionIndex: number) => {
     setAnswers({
@@ -113,7 +113,18 @@ export function ExamTaking() {
     );
   }
 
-  const question = questions[currentQuestion];
+  if (questions.length === 0) {
+    return (
+      <div className="error-state">
+        <p>This exam has no questions yet. Please check back later.</p>
+        <button className="btn-primary" onClick={() => navigate('/exams/categories')}>
+          Back to Categories
+        </button>
+      </div>
+    );
+  }
+
+  const question = questions[currentQuestion] ?? questions[0];
   const answeredCount = Object.keys(answers).length;
 
   return (
