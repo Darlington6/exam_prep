@@ -32,12 +32,17 @@ app.use((err, req, res, _next) => {
 
 // Only start the server if this file is run directly, not when imported by tests
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    mongoose.connect(process.env.MONGO_URI)
-      .then(() => console.log('MongoDB connected'))
-      .catch(err => console.error('DB connection error:', err.message));
-  });
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log('MongoDB connected');
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch(err => {
+      console.error('DB connection error:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
