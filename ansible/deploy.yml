@@ -164,7 +164,7 @@
         state: restarted
         enabled: true
 
-    - name: Obtain Let's Encrypt certificate and configure HTTPS
+    - name: Obtain Let's Encrypt certificate (first deploy only)
       command: >
         certbot --nginx -d {{ domain }}
         --non-interactive --agree-tos
@@ -172,3 +172,11 @@
         --redirect
       args:
         creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+
+    - name: Reinstall certificate into nginx config (every deploy)
+      # Re-applies the existing cert to nginx after each config overwrite.
+      # certbot install does not request a new cert — safe from rate limits.
+      command: >
+        certbot install --nginx --cert-name {{ domain }}
+        --non-interactive --redirect
+      when: ansible_check_mode is not defined or not ansible_check_mode
