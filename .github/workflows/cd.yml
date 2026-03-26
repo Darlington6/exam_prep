@@ -1,0 +1,149 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 1: CI Checks
+      # All quality and security gates must pass before any deployment happens.
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: cd backend && npm install
+
+      - name: Run Backend Tests
+        run: cd backend && npm test
+
+      - name: Install Frontend Dependencies
+        run: cd frontend && npm install
+
+      - name: Run Frontend Lint
+        run: cd frontend && npm run lint
+
+      - name: Build Frontend (CI check)
+        run: cd frontend && npm run build
+
+      - name: Build Backend Docker Image (for scanning)
+        run: docker build -t exam_backend ./backend
+
+      - name: Build Frontend Docker Image (for scanning)
+        run: docker build -t exam_frontend ./frontend
+
+      - name: Scan Backend Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: exam_backend
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Scan Frontend Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: exam_frontend
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Run tfsec (Terraform IaC Security Scan)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform
+          soft_fail: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Authenticate with Azure
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      # Step 3: Build and Push Production Images to ACR (with commit SHA tags for traceability)
+      # Images are tagged with :latest AND the commit SHA for traceability.
+      # The frontend image is rebuilt with the production API URL baked in
+      # (nginx on the bastion proxies /api -> backend - no port needed).
+
+      - name: Build and Tag Backend Image
+        run: |
+          docker build \
+            -t ${{ secrets.ACR_NAME }}.azurecr.io/backend:latest \
+            -t ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }} \
+            ./backend
+
+      - name: Build and Tag Frontend Image
+        run: |
+          docker build \
+            --build-arg VITE_API_URL=http://${{ secrets.BASTION_IP }}/api \
+            -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:latest \
+            -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }} \
+            ./frontend
+
+      - name: Push Backend Images to ACR
+        run: |
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/backend:latest
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+
+      - name: Push Frontend Images to ACR
+        run: |
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/frontend:latest
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }}
+
+      # Step 4: Deploy via Ansible Playbook
+      # The Ansible playbook connects to the bastion host via SSH, then to the app VM (via the bastion) to pull the new images and restart the services.
+      
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Add bastion to known_hosts to prevent interactive fingerprint prompt
+          ssh-keyscan -H ${{ secrets.BASTION_IP }} >> ~/.ssh/known_hosts
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Generate Ansible Inventory
+        # Inventory is generated at runtime with live IPs from GitHub Secrets
+        # so real IP addresses are never committed to the repository.
+        run: |
+          cat > ansible/inventory.ini << EOF
+          [bastion]
+          ${{ secrets.BASTION_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+          [app]
+          ${{ secrets.VM_PRIVATE_IP }} ansible_user=${{ secrets.VM_ADMIN_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyJump=${{ secrets.VM_ADMIN_USERNAME }}@${{ secrets.BASTION_IP }} -o StrictHostKeyChecking=no'
+          EOF
+
+      - name: Run Ansible Deployment Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i ansible/inventory.ini ansible/deploy.yml \
+            --extra-vars "acr_login_server=${{ secrets.ACR_NAME }}.azurecr.io \
+                acr_username=${{ secrets.ACR_USERNAME }} \
+                acr_password=${{ secrets.ACR_PASSWORD }} \
+                mongo_uri='${{ secrets.MONGO_URI }}' \
+                jwt_secret='${{ secrets.JWT_SECRET }}' \
+                vm_private_ip=${{ secrets.VM_PRIVATE_IP }}"
+                
