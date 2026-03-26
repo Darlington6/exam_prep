@@ -6,13 +6,15 @@ import '../../styles/ExamList.css';
 interface ExamListProps {
   onEdit: (examId: string) => void;
   onCreate: () => void;
+  managingExamId: string | null;
+  onManageQuestions: (examId: string) => void;
+  onCloseQuestions: () => void;
 }
 
-export function ExamList({ onEdit, onCreate }: ExamListProps) {
+export function ExamList({ onEdit, onCreate, managingExamId, onManageQuestions, onCloseQuestions }: ExamListProps) {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [managingExamId, setManagingExamId] = useState<string | null>(null);
 
   const loadExams = useCallback(async () => {
     try {
@@ -57,11 +59,11 @@ export function ExamList({ onEdit, onCreate }: ExamListProps) {
   };
 
   const handleManageQuestions = (examId: string) => {
-    setManagingExamId(examId);
+    onManageQuestions(examId);
   };
 
   const handleCloseQuestionManager = () => {
-    setManagingExamId(null);
+    onCloseQuestions();
   };
 
   if (loading) {
