@@ -1,5 +1,7 @@
 .exam-categories-container {
-  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7fa;
 }
 
@@ -9,10 +11,49 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* Shared header layout — used by ExamCategories, ExamSelection, etc. */
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.btn-admin {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-admin:hover {
+  opacity: 0.9;
+}
+
 .categories-main {
+  flex: 1;
   max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .categories-subtitle {
@@ -111,19 +152,61 @@
   font-size: 1.75rem;
 }
 
+@media (max-width: 1024px) {
+  .categories-main {
+    padding: 2rem 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .categories-main {
+    padding: 1.5rem 1rem;
+  }
+
   .categories-grid {
     grid-template-columns: 1fr;
   }
 
   .header-content {
     flex-direction: column;
-    align-items: start;
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5rem;
   }
 
   .header-left {
     flex-direction: column;
-    align-items: start;
+    align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  .header-left h1 {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .categories-main {
+    padding: 1rem 0.75rem;
+  }
+
+  .category-card {
+    padding: 1.25rem;
+  }
+
+  .category-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+  }
+
+  .categories-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
   }
 }

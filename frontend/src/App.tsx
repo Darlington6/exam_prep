@@ -14,6 +14,7 @@ import { ExamCategories } from './pages/ExamCategories';
 import { ExamSelection } from './pages/ExamSelection';
 import { ExamTaking } from './pages/ExamTaking';
 import { ExamResults } from './pages/ExamResults';
+import { Footer } from './components/Footer';
 import './App.css';
 
 function HomeOrDashboard() {
@@ -26,70 +27,73 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<HomeOrDashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/exams/categories"
-            element={
-              <ProtectedRoute>
-                <ExamCategories />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/exams/category/:categoryId"
-            element={
-              <ProtectedRoute>
-                <ExamSelection />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/exam/:examId"
-            element={
-              <ProtectedRoute>
-                <ExamTaking />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/exam/:examId/results"
-            element={
-              <ProtectedRoute>
-                <ExamResults />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="app-content">
+          <Routes>
+            <Route path="/" element={<HomeOrDashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exams/categories"
+              element={
+                <ProtectedRoute>
+                  <ExamCategories />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exams/category/:categoryId"
+              element={
+                <ProtectedRoute>
+                  <ExamSelection />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exam/:examId"
+              element={
+                <ProtectedRoute>
+                  <ExamTaking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exam/:examId/results"
+              element={
+                <ProtectedRoute>
+                  <ExamResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+        <Footer />
       </AuthProvider>
     </BrowserRouter>
   );
