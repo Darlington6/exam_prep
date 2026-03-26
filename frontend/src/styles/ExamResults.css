@@ -1,7 +1,8 @@
 .exam-results-container {
-  min-height: 100vh;
+  flex: 1;
   background-color: #f5f7fa;
   padding: 3rem 2rem;
+  box-sizing: border-box;
 }
 
 .results-card {
@@ -11,6 +12,8 @@
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .results-header {
@@ -283,7 +286,25 @@
   min-width: 150px;
 }
 
+@media (max-width: 1024px) {
+  .exam-results-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .results-header h1 {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .exam-results-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .results-header {
+    padding: 2rem 1.25rem;
+  }
+
   .results-header h1 {
     font-size: 2rem;
   }
@@ -315,5 +336,43 @@
 
   .results-actions button {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .exam-results-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .results-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .results-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .score-number {
+    font-size: 1.5rem;
+  }
+
+  .results-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .btn-toggle-answers {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+
+  .detailed-answers {
+    padding: 1rem;
   }
 }

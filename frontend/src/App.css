@@ -1,15 +1,23 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grows to fill space between #root top and footer, enabling sticky footer */
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Auth pages */
 .auth-page {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   padding: 1rem;
 }
 
@@ -107,7 +115,12 @@
 
 /* Home */
 .home-page {
+  flex: 1;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
   padding: 1.5rem;
+  box-sizing: border-box;
 }
 
 .home-header {
@@ -249,5 +262,47 @@
   .btn-logout:hover {
     border-color: #535bf2;
     color: #535bf2;
+  }
+}
+
+/* ── Home page responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .home-page {
+    padding: 1rem;
+  }
+
+  .home-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .home-header nav {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-header nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .auth-card {
+    padding: 1.25rem;
+  }
+
+  .auth-card h1 {
+    font-size: 1.4rem;
   }
 }

@@ -1,5 +1,7 @@
 .exam-selection-container {
-  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7fa;
 }
 
@@ -9,10 +11,38 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* Shared header layout for ExamSelection */
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-left h1 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.75rem;
+}
+
 .selection-main {
+  flex: 1;
   max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .selection-subtitle {
@@ -168,13 +198,47 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+@media (max-width: 1024px) {
+  .selection-main {
+    padding: 2rem 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .selection-main {
+    padding: 1.5rem 1rem;
+  }
+
   .exams-grid {
     grid-template-columns: 1fr;
   }
 
   .exam-card-meta {
     grid-template-columns: 1fr;
+  }
+
+  .header-left h1 {
+    font-size: 1.35rem;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .selection-main {
+    padding: 1rem 0.75rem;
+  }
+
+  .exam-card-selection {
+    padding: 1.25rem;
+  }
+
+  .selection-subtitle {
+    font-size: 0.95rem;
   }
 }
 
