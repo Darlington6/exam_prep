@@ -99,6 +99,21 @@ resource "azurerm_network_security_rule" "bastion_allow_http" {
   network_security_group_name = azurerm_network_security_group.bastion_nsg.name
 }
 
+# tfsec:ignore:azure-network-no-public-ingress
+resource "azurerm_network_security_rule" "bastion_allow_https" {
+  name                        = "Allow-HTTPS"
+  priority                    = 120
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  destination_port_range      = "443"
+  source_port_range           = "*"
+  source_address_prefix       = "*" # Intentional: users access the app over the internet
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.bastion_nsg.name
+}
+
 # App NSG — only the bastion subnet can SSH or send app traffic here
 resource "azurerm_network_security_group" "app_nsg" {
   name                = "app-nsg"
@@ -153,6 +168,7 @@ resource "azurerm_public_ip" "bastion_ip" {
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_network_interface" "bastion_nic" {
@@ -172,7 +188,7 @@ resource "azurerm_linux_virtual_machine" "bastion" {
   name                = "exam-bastion"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  size                = "Standard_B1s" # Only runs nginx
+  size                = "Standard_DS1_v2" # Only runs nginx
   admin_username      = var.admin_username
 
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
@@ -217,7 +233,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "exam-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  size                = "Standard_B2s" # 2 vCPU / 4 GiB — needed to run Docker containers
+  size                = "Standard_D2s_v3" # 2 vCPU / 8 GiB
   admin_username      = var.admin_username
 
   network_interface_ids = [azurerm_network_interface.vm_nic.id]

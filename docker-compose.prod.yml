@@ -1,0 +1,41 @@
+version: "3.8"
+
+# Production Docker Compose — used by Ansible on the app VM.
+# - No local mongo service: uses Azure CosmosDB instead (MONGO_URI in .env)
+# - Images pulled from ACR (ACR_LOGIN_SERVER in .env)
+# - .env file in the same directory provides all variables
+
+services:
+
+  backend:
+    image: ${ACR_LOGIN_SERVER}/backend:latest
+    container_name: exam_backend
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=5001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/api/auth/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    image: ${ACR_LOGIN_SERVER}/frontend:latest
+    container_name: exam_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
