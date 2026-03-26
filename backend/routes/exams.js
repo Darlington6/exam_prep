@@ -1,130 +1,86 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const router = express.Router();
 const Exam = require('../models/Exam');
 const Question = require('../models/Question');
 const ExamAttempt = require('../models/ExamAttempt');
+const { auth } = require('../middleware/auth');
 
-const router = express.Router();
+// NOTE: specific paths must come before /:id to avoid being swallowed as IDs
 
-// All student exam routes require authentication
-router.use(auth);
-
-// GET /api/exams/attempts — get current user's exam attempts
-router.get('/attempts', async (req, res) => {
+// GET /api/exams/category/:category
+router.get('/category/:category', auth, async (req, res) => {
   try {
-    const attempts = await ExamAttempt.find({ userId: req.user._id })
-      .sort({ completedAt: -1 })
-      .populate('examId', 'title category difficulty');
-    res.json({ attempts });
-  } catch (err) {
-    console.error('Get attempts error:', err);
-    res.status(500).json({ message: 'Failed to fetch attempts.' });
-  }
-});
-
-// GET /api/exams/category/:category — get active exams by category
-router.get('/category/:category', async (req, res) => {
-  try {
-    const category = req.params.category.toLowerCase();
-    const exams = await Exam.find({ category, isActive: true })
-      .sort({ createdAt: -1 })
-      .select('-__v');
+    const exams = await Exam.find({
+      category: req.params.category,
+      isActive: true,
+    }).sort({ createdAt: -1 });
     res.json({ exams });
   } catch (err) {
-    console.error('Get exams by category error:', err);
-    res.status(500).json({ message: 'Failed to fetch exams.' });
+    console.error('Get exams by category error:', err.message);
+    res.status(500).json({ message: 'Failed to load exams.' });
   }
 });
 
-// GET /api/exams/categories — list distinct exam categories
-router.get('/categories', async (req, res) => {
+// GET /api/exams/attempts  (must come before /:id)
+router.get('/attempts', auth, async (req, res) => {
   try {
-    const categories = await Exam.distinct('category');
-    res.json({ categories });
+    const attempts = await ExamAttempt.find({ userId: req.user._id })
+      .sort({ completedAt: -1 });
+    res.json({ attempts });
   } catch (err) {
-    console.error('Get categories error:', err);
-    res.status(500).json({ message: 'Failed to fetch categories.' });
+    console.error('Get attempts error:', err.message);
+    res.status(500).json({ message: 'Failed to load attempts.' });
   }
 });
 
-// GET /api/exams/:id — get a single exam
-router.get('/:id', async (req, res) => {
+// GET /api/exams/:id
+router.get('/:id', auth, async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.id).select('-__v');
-    if (!exam) {
-      return res.status(404).json({ message: 'Exam not found.' });
-    }
-    if (!exam.isActive) {
-      return res.status(404).json({ message: 'This exam is not currently available.' });
-    }
+    const exam = await Exam.findOne({ _id: req.params.id, isActive: true });
+    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
     res.json({ exam });
   } catch (err) {
-    console.error('Get exam error:', err);
-    res.status(500).json({ message: 'Failed to fetch exam.' });
+    console.error('Get exam error:', err.message);
+    res.status(500).json({ message: 'Failed to load exam.' });
   }
 });
 
-// GET /api/exams/:examId/questions — get questions for an exam (hide correct answers)
-router.get('/:examId/questions', async (req, res) => {
+// GET /api/exams/:id/questions
+// Returns full question data including isCorrect so ExamResults can show the answer review.
+router.get('/:id/questions', auth, async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.examId);
-    if (!exam || !exam.isActive) {
-      return res.status(404).json({ message: 'Exam not found.' });
-    }
-
-    const questions = await Question.find({ examId: req.params.examId })
-      .sort({ order: 1 })
-      .select('-__v');
-
-    // Strip isCorrect from options so students can't cheat
-    const sanitized = questions.map((q) => {
-      const obj = q.toObject();
-      obj.options = obj.options.map(({ text }) => ({ text }));
-      delete obj.explanation;
-      return obj;
-    });
-
-    res.json({ questions: sanitized });
+    const questions = await Question.find({ examId: req.params.id })
+      .sort({ order: 1, createdAt: 1 });
+    res.json({ questions });
   } catch (err) {
-    console.error('Get questions error:', err);
-    res.status(500).json({ message: 'Failed to fetch questions.' });
+    console.error('Get questions error:', err.message);
+    res.status(500).json({ message: 'Failed to load questions.' });
   }
 });
 
-// POST /api/exams/:examId/submit — submit an exam attempt
-router.post('/:examId/submit', async (req, res) => {
+// POST /api/exams/:id/submit
+router.post('/:id/submit', auth, async (req, res) => {
   try {
-    const exam = await Exam.findById(req.params.examId);
-    if (!exam || !exam.isActive) {
-      return res.status(404).json({ message: 'Exam not found.' });
-    }
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
 
-    const { answers } = req.body;
-    if (!answers || typeof answers !== 'object') {
-      return res.status(400).json({ message: 'Answers are required.' });
-    }
-
-    // Fetch questions with correct answers
-    const questions = await Question.find({ examId: req.params.examId }).sort({ order: 1 });
-    const totalQuestions = questions.length;
-
-    if (totalQuestions === 0) {
+    const questions = await Question.find({ examId: req.params.id }).sort({ order: 1 });
+    if (questions.length === 0) {
       return res.status(400).json({ message: 'This exam has no questions.' });
     }
 
-    // Grade the exam
-    let correctAnswers = 0;
-    for (const question of questions) {
-      const selectedIndex = answers[question._id.toString()];
-      if (selectedIndex !== undefined && selectedIndex !== null) {
-        const selectedOption = question.options[selectedIndex];
-        if (selectedOption && selectedOption.isCorrect) {
-          correctAnswers++;
-        }
-      }
-    }
+    const { answers = {} } = req.body;
 
-    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    let correctAnswers = 0;
+    questions.forEach((q) => {
+      const userAnswer = answers[q._id.toString()];
+      const correctIndex = q.options.findIndex((o) => o.isCorrect);
+      if (userAnswer !== undefined && Number(userAnswer) === correctIndex) {
+        correctAnswers++;
+      }
+    });
+
+    const score = Math.round((correctAnswers / questions.length) * 100);
     const passed = score >= exam.passingScore;
 
     const attempt = await ExamAttempt.create({
@@ -132,14 +88,15 @@ router.post('/:examId/submit', async (req, res) => {
       userId: req.user._id,
       answers,
       score,
-      totalQuestions,
+      totalQuestions: questions.length,
       correctAnswers,
       passed,
+      completedAt: new Date(),
     });
 
-    res.status(201).json({ attempt });
+    res.json({ attempt });
   } catch (err) {
-    console.error('Submit attempt error:', err);
+    console.error('Submit exam error:', err.message);
     res.status(500).json({ message: 'Failed to submit exam.' });
   }
 });
