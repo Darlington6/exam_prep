@@ -19,8 +19,8 @@ variable "location" {
     DS/D-series (Standard_DS1_v2, Standard_D2s_v3) are used instead and are
     available in all three regions listed above.
   EOT
-  type    = string
-  default = "South Africa North"
+  type        = string
+  default     = "South Africa North"
 
   validation {
     condition = contains([
