@@ -2,6 +2,12 @@
 
 > A web-based platform helping African students excel in their examinations through interactive practice and instant feedback
 
+## Live Application
+
+**URL:** [https://20.164.200.14.sslip.io](https://20.164.200.14.sslip.io)
+
+---
+
 ## African Context
 
 Many students across Africa prepare for important national examinations at the end of secondary school and for university entrance exams. These exams are highly competitive and play a major role in determining students' academic and career opportunities.
@@ -12,10 +18,12 @@ This project aims to provide a simple, affordable, and accessible online platfor
 
 ## Team Members
 
-- UWIMANA Chantal - Frontend, DevOps - 755990021
-- Desmond Tunyinko - Backend, DevOps - 297697450
-- Nmesoma Solomon Peter - Backend, DevOps - 764925507
-- Sharangabo Edouard - Frontend, DevOps - [Student ID]
+| Name | Role | Student ID |
+|------|------|------------|
+| UWIMANA Chantal | Frontend · CI/Security | 755990021 |
+| Desmond Tunyinko | Backend · Ansible / CD | 297697450 |
+| Nmesoma Solomon Peter | Backend · Terraform / IaC | 764925507 |
+| Sharangabo Edouard | Frontend · DevOps | [Student ID] |
 
 ## Project Overview
 
@@ -48,17 +56,68 @@ Schools and training centers
 - **Protected Routes**: Role-based access control for students and administrators
 - **Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
 
+## Architecture
+
+```mermaid
+graph TB
+    Dev[Developer] -->|git push / PR| GitHub[GitHub Repository]
+    GitHub -->|PR triggers| CI[CI Pipeline\nlint · test · docker build · trivy · tfsec]
+    CI -->|must pass| Merge[PR Merged to main]
+    Merge --> CD[CD Pipeline\nbuild + push + ansible deploy]
+    Merge --> TF[Terraform Pipeline\nprovision infrastructure]
+
+    CD --> ACR[Azure Container Registry\nbackend:latest · frontend:latest]
+    CD -->|SSH via bastion| Ansible[Ansible Playbook]
+
+    subgraph Azure[Azure Virtual Network — 10.0.0.0/16]
+        subgraph Public[Public Subnet — 10.0.1.0/24]
+            Bastion[Bastion Host\nnginx reverse proxy\nPublic IP :80]
+        end
+        subgraph Private[Private Subnet — 10.0.2.0/24]
+            AppVM[App VM\nDocker + Docker Compose\nbackend :5001 · frontend :3000]
+        end
+        CosmosDB[(Azure CosmosDB\nMongoDB API)]
+    end
+
+    Ansible --> Bastion
+    Bastion -->|ProxyJump SSH| AppVM
+    ACR -->|docker pull| AppVM
+    AppVM --> CosmosDB
+
+    Users[Users / Browser] -->|HTTP :80| Bastion
+    Bastion -->|proxy /api → :5001| AppVM
+    Bastion -->|proxy / → :3000| AppVM
+```
+
+### Component Description
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **GitHub Actions CI** | `.github/workflows/ci.yml` | Runs on every PR: lint, tests, Docker builds, Trivy + tfsec security scans. Blocks merges on failure. |
+| **GitHub Actions CD** | `.github/workflows/cd.yml` | Runs on merge to main: re-runs CI, builds + pushes images to ACR, deploys via Ansible. |
+| **Terraform Pipeline** | `.github/workflows/terraform.yml` | Validates IaC on PRs; TF Cloud applies on merge to main. |
+| **Azure VNet** | `terraform/main.tf` | Isolated private network (10.0.0.0/16) containing all resources. |
+| **Bastion Host** | Public subnet (10.0.1.0/24) | Only VM with a public IP. Serves as SSH jump host for Ansible and nginx reverse proxy for user traffic. |
+| **App VM** | Private subnet (10.0.2.0/24) | No public IP. Runs Docker containers. Only reachable from the bastion. |
+| **Azure Container Registry** | Managed Azure service | Stores Docker images built by CD. App VM pulls from here at deploy time. |
+| **Azure CosmosDB** | Managed Azure service | MongoDB-compatible managed database. Replaces the local Docker MongoDB in production. |
+| **Bastion NSG** | Public subnet | Allows SSH (22) and HTTP (80) from internet. SSH must be open to allow GitHub Actions runners (dynamic IPs). |
+| **App NSG** | Private subnet | Allows SSH and app ports (80, 3000, 5001) only from the bastion subnet (10.0.1.0/24). |
+
 ## Technology Stack
 
-| Layer        | Technology                                                        |
-| ------------ | ----------------------------------------------------------------- |
-| **Frontend** | React 19, TypeScript, Vite 7, React Router 7, Axios               |
-| **Backend**  | Node.js 24, Express 4, Mongoose 9                                 |
-| **Database** | MongoDB 6 (Docker) / MongoDB Atlas (production)                   |
-| **Auth**     | JWT (jsonwebtoken), bcryptjs, role-based access (student / admin) |
-| **Testing**  | Jest 30, Supertest, MongoMemoryServer                             |
-| **DevOps**   | Docker, Docker Compose, GitHub Actions CI                         |
-| **Linting**  | ESLint 9, typescript-eslint                                       |
+| Layer           | Technology                                                        |
+| --------------- | ----------------------------------------------------------------- |
+| **Frontend**    | React 19, TypeScript, Vite 7, React Router 7, Axios               |
+| **Backend**     | Node.js 24, Express 4, Mongoose 9                                 |
+| **Database**    | MongoDB 6 (local dev) / Azure CosmosDB — MongoDB API (production) |
+| **Auth**        | JWT (jsonwebtoken), bcryptjs, role-based access (student / admin) |
+| **Testing**     | Jest 30, Supertest, MongoMemoryServer                             |
+| **DevOps**      | Docker, Docker Compose, GitHub Actions CI/CD, Ansible             |
+| **IaC**         | Terraform (Azure provider) — VNet, VMs, ACR, CosmosDB             |
+| **Cloud**       | Azure (South Africa North) — VNet, Bastion, App VM, ACR, CosmosDB |
+| **Security**    | Trivy (container scan), tfsec (IaC scan), NSG rules               |
+| **Linting**     | ESLint 9, typescript-eslint                                       |
 
 ## Getting Started
 
@@ -254,11 +313,11 @@ npm run lint
 
 Orchestrates three services:
 
-| Service    | Image                   | Port      |
-| ---------- | ----------------------- | --------- |
-| `backend`  | Built from `./backend`  | 5001      |
-| `frontend` | Built from `./frontend` | 3000 -> 80|
-| `mongo`    | `mongo:6`               | 27017     |
+| Service    | Image                   | Port       |
+| ---------- | ----------------------- | ---------- |
+| `backend`  | Built from `./backend`  | 5001       |
+| `frontend` | Built from `./frontend` | 3000 -> 80 |
+| `mongo`    | `mongo:6`               | 27017      |
 
 A named volume `mongo-data` provides persistent database storage.
 
@@ -266,29 +325,64 @@ A named volume `mongo-data` provides persistent database storage.
 
 ## CI/CD Pipeline
 
-The project uses **GitHub Actions** for continuous integration (`.github/workflows/ci.yml`).
+The project uses three GitHub Actions workflows for a complete Git-to-Production pipeline.
 
-### Trigger Conditions
+### CI Pipeline (`.github/workflows/ci.yml`)
 
-- **Push** to any branch except `main`
-- **Pull request** targeting `main`
-- **Manual dispatch** via the Actions tab
+**Triggers:** push to any branch except `main`, pull requests targeting `main`, manual dispatch.
 
-### Pipeline Steps
-
-| Step                            | Description                                |
-| ------------------------------- | ------------------------------------------ |
-| Checkout repository             | `actions/checkout@v3`                      |
-| Setup Node 24                   | `actions/setup-node@v3`                    |
-| Install backend dependencies    | `npm install`                              |
-| **Run backend tests**           | `npm test` (Jest + MongoMemoryServer)      |
-| Install frontend dependencies   | `npm install`                              |
-| **Run frontend lint**           | `npm run lint` (ESLint)                    |
-| **Build frontend**              | `npm run build` (TypeScript + Vite)        |
-| **Build backend Docker image**  | `docker build -t exam_backend ./backend`   |
-| **Build frontend Docker image** | `docker build -t exam_frontend ./frontend` |
+| Step | Description |
+| ---- | ----------- |
+| Backend tests | `npm test` (Jest + MongoMemoryServer) |
+| Frontend lint | `npm run lint` (ESLint) |
+| Frontend build | `npm run build` (TypeScript + Vite) |
+| Docker builds | Build `exam_backend` and `exam_frontend` images |
+| Trivy scan | Scan backend and frontend images for CRITICAL/HIGH CVEs — **fails build** |
+| tfsec scan | Scan `terraform/` for IaC misconfigurations — **fails build** |
 
 All checks must pass before a pull request can be merged to `main`.
+
+### Terraform Pipeline (`.github/workflows/terraform.yml`)
+
+**Triggers:** push to `main` and pull requests.
+
+| Step | Description |
+| ---- | ----------- |
+| `terraform fmt` | Enforces consistent formatting |
+| `terraform init` | Authenticates to Terraform Cloud |
+| `terraform validate` | Validates configuration syntax |
+| `terraform plan` | Shows what will change (visible in PR checks) |
+
+> **Note:** `terraform apply` is handled automatically by **Terraform Cloud's VCS integration** when code is merged to `main`. The GitHub Actions workflow only handles format/validate/plan for PR feedback.
+
+### CD Pipeline (`.github/workflows/cd.yml`)
+
+**Triggers:** push to `main` only.
+
+| Step | Description |
+| ---- | ----------- |
+| CI checks | All lint, test, and security scans run before any deployment |
+| Azure login | Authenticates with service principal |
+| Docker build + push | Builds images tagged with `:latest` and commit SHA, pushes to ACR |
+| SSH setup | Writes private key, adds bastion to known_hosts |
+| Ansible inventory | Dynamically generates `inventory.ini` with live IPs from GitHub Secrets |
+| Ansible deploy | Configures app VM (Docker, images, `docker compose up`) + bastion (nginx proxy) |
+
+### Required GitHub Secrets
+
+| Secret | Where to get it |
+| ------ | --------------- |
+| `AZURE_CREDENTIALS` | `az ad sp create-for-rbac --sdk-auth` |
+| `TF_API_TOKEN` | Terraform Cloud → User Settings → Tokens |
+| `SSH_PRIVATE_KEY` | Private half of the key pair set in Terraform Cloud |
+| `VM_ADMIN_USERNAME` | `azureuser` (default) |
+| `ACR_NAME` | e.g. `examprepregistry` |
+| `ACR_USERNAME` | `az acr credential show --name <acr_name>` (after `terraform apply`) |
+| `ACR_PASSWORD` | `az acr credential show --name <acr_name>` (after `terraform apply`) |
+| `MONGO_URI` | `terraform output cosmosdb_connection_string` (after `terraform apply`) |
+| `JWT_SECRET` | `openssl rand -base64 32` |
+| `BASTION_IP` | `terraform output bastion_public_ip` (after `terraform apply`) |
+| `VM_PRIVATE_IP` | `terraform output app_vm_private_ip` (after `terraform apply`) |
 
 ---
 
@@ -331,113 +425,180 @@ All checks must pass before a pull request can be merged to `main`.
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
 exam_prep/
 ├── .github/
-│   ├── CODEOWNERS                  # Code ownership rules
-│   ├── pull_request_template.md    # PR template
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug-report.yml
-│   │   ├── config.yml
-│   │   ├── devops.yml
-│   │   ├── epic.yml
-│   │   ├── spike.yml
-│   │   ├── task.yml
-│   │   └── user-story.yml
+│   ├── CODEOWNERS                      # Code ownership rules
+│   ├── pull_request_template.md        # PR checklist template
+│   ├── ISSUE_TEMPLATE/                 # Standardised issue forms
 │   └── workflows/
-│       └── ci.yml                  # GitHub Actions CI pipeline
+│       ├── ci.yml                      # CI: lint, test, Trivy, tfsec (on PRs)
+│       ├── cd.yml                      # CD: build, push to ACR, Ansible deploy (on main)
+│       └── terraform.yml               # IaC: fmt, validate, plan (TF Cloud applies)
 │
-├── backend/
+├── terraform/                          # Infrastructure as Code (Azure)
+│   ├── main.tf                         # VNet, subnets, NSGs, VMs, ACR, CosmosDB
+│   ├── variables.tf                    # Input variables
+│   ├── outputs.tf                      # Outputs: bastion IP, VM IP, ACR URL, DB URI
+│   └── README.md                       # Terraform-specific docs
+│
+├── ansible/                            # Configuration management
+│   ├── deploy.yml                      # Playbook: configures app VM + bastion nginx
+│   ├── inventory.ini.example           # Inventory template (real file generated in CD)
+│   ├── ansible.cfg                     # SSH config (pipelining, host key checking off)
+│   └── README.md                       # Ansible-specific docs
+│
+├── backend/                            # Node.js Express API
+│   ├── Dockerfile                      # Node 24 Alpine, non-root user
 │   ├── .dockerignore
-│   ├── .env.example                # Environment variables template
-│   ├── Dockerfile                  # Backend container (Node 24 Alpine)
-│   ├── package.json
-│   ├── server.js                   # Express app entry point
-│   ├── __tests__/
-│   │   ├── setup.js                # MongoMemoryServer test setup
-│   │   ├── auth.test.js            # Auth route tests (11 cases)
-│   │   ├── exams.test.js           # Student exam route tests (15 cases)
-│   │   ├── admin.test.js           # Admin route tests (13 cases)
-│   │   └── sample.test.js          # Smoke test
-│   ├── middleware/
-│   │   ├── auth.js                 # JWT authentication middleware
-│   │   └── admin.js                # Admin role authorization middleware
-│   ├── models/
-│   │   ├── User.js                 # User schema (name, email, password, role)
-│   │   ├── Exam.js                 # Exam schema (title, category, difficulty, duration)
-│   │   ├── Question.js             # Question schema (options, correct answer, explanation)
-│   │   └── ExamAttempt.js          # Attempt schema (score, answers, passed)
-│   ├── routes/
-│   │   ├── auth.js                 # Register, login, profile routes
-│   │   ├── exams.js                # Student exam routes (browse, take, submit)
-│   │   └── admin.js                # Admin CRUD routes (exams, questions, external fetch)
-│   └── scripts/
-│       └── make-admin.js           # CLI utility to promote a user to admin
+│   ├── .env.example                    # Environment variables template
+│   ├── server.js                       # Express app entry point
+│   ├── __tests__/                      # 40 test cases (Jest + MongoMemoryServer)
+│   ├── middleware/                     # JWT auth + admin role middleware
+│   ├── models/                         # Mongoose schemas (User, Exam, Question, Attempt)
+│   ├── routes/                         # auth, exams, admin routes
+│   └── scripts/make-admin.js           # CLI: promote user to admin
 │
-├── frontend/
+├── frontend/                           # React 19 + TypeScript
+│   ├── Dockerfile                      # Multi-stage: Node builder → Nginx (with VITE_API_URL ARG)
+│   ├── nginx.conf                      # SPA routing + static asset caching
 │   ├── .dockerignore
-│   ├── .env.example                # Environment variables template
-│   ├── .gitignore
-│   ├── Dockerfile                  # Multi-stage build (Node → Nginx)
-│   ├── index.html                  # HTML entry point
-│   ├── package.json
-│   ├── vite.config.ts              # Vite configuration
-│   ├── tsconfig.json               # TypeScript configuration
-│   ├── tsconfig.app.json
-│   ├── tsconfig.node.json
-│   ├── eslint.config.js            # ESLint configuration
-│   ├── public/
-│   │   └── vite.svg
-│   └── src/
-│       ├── main.tsx                # React entry point
-│       ├── App.tsx                 # Root component with routing
-│       ├── App.css
-│       ├── index.css
-│       ├── api/
-│       │   └── client.ts           # Axios API client with auth interceptors
-│       ├── assets/
-│       │   └── react.svg
-│       ├── components/
-│       │   ├── ProtectedRoute.tsx   # Auth-guarded route wrapper
-│       │   └── admin/
-│       │       ├── ExamForm.tsx     # Create/edit exam form
-│       │       ├── ExamList.tsx     # Admin exam listing
-│       │       ├── ExternalAPIFetch.tsx  # Fetch exams from external APIs
-│       │       ├── QuestionForm.tsx # Create/edit question form
-│       │       └── QuestionManager.tsx  # Question CRUD manager
-│       ├── contexts/
-│       │   ├── AuthContext.tsx      # Auth provider (login, register, logout, state)
-│       │   └── useAuth.ts          # useAuth hook
-│       ├── pages/
-│       │   ├── Home.tsx            # Landing page with navigation
-│       │   ├── Login.tsx           # Login page
-│       │   ├── Register.tsx        # Registration page
-│       │   ├── Dashboard.tsx       # Student dashboard
-│       │   ├── ExamCategories.tsx  # Browse exam categories
-│       │   ├── ExamSelection.tsx   # Select an exam within a category
-│       │   ├── ExamTaking.tsx      # Take an exam (timed)
-│       │   ├── ExamResults.tsx     # View exam results
-│       │   └── AdminDashboard.tsx  # Admin panel
-│       └── styles/
-│           ├── AdminDashboard.css
-│           ├── Dashboard.css
-│           ├── ExamCategories.css
-│           ├── ExamForm.css
-│           ├── ExamList.css
-│           ├── ExamResults.css
-│           ├── ExamSelection.css
-│           ├── ExamTaking.css
-│           ├── ExternalAPIFetch.css
-│           ├── QuestionForm.css
-│           └── QuestionManager.css
+│   ├── .env.example                    # Environment variables template
+│   └── src/                            # Pages, components, context, API client
 │
-├── docker-compose.yml              # Orchestrates backend, frontend, MongoDB
+├── docker-compose.yml                  # Local dev: backend + frontend + MongoDB
+├── docker-compose.prod.yml             # Production: backend + frontend (no mongo, ACR images)
 ├── .gitignore
 ├── LICENSE
 └── README.md
 ```
+
+## Setup Instructions
+
+### Prerequisites
+
+- Azure account with Owner or Contributor access
+- Terraform Cloud account (free tier)
+- Azure CLI (`az`) installed and authenticated
+- Ansible (`pip install ansible`) for local testing
+- Docker ≥ 20.10 and Docker Compose ≥ 2.0
+- An SSH key pair (`ssh-keygen -t ed25519`)
+
+### Deploying to Production
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Darlington6/exam_prep.git
+   cd exam_prep
+   ```
+
+2. **Configure Terraform Cloud workspace variables**
+
+   In [Terraform Cloud](https://app.terraform.io) → workspace `exam_prep` → Variables:
+
+   | Variable | Type | Required |
+   |----------|------|----------|
+   | `ssh_public_key` | Terraform (sensitive) | Paste your `~/.ssh/id_ed25519.pub` content |
+   | `acr_name` | Terraform | e.g. `examprepregistry` |
+   | `cosmosdb_account_name` | Terraform | e.g. `exam-prep-cosmos-db` |
+   | `ARM_CLIENT_ID` | Environment (sensitive) | From service principal |
+   | `ARM_CLIENT_SECRET` | Environment (sensitive) | From service principal |
+   | `ARM_TENANT_ID` | Environment (sensitive) | From service principal |
+   | `ARM_SUBSCRIPTION_ID` | Environment (sensitive) | From service principal |
+
+   Create the service principal if you don't have one:
+   ```bash
+   az ad sp create-for-rbac --name exam-prep-sp --role Contributor \
+     --scopes /subscriptions/<your-subscription-id> --sdk-auth
+   ```
+
+3. **Set GitHub Secrets** (Settings → Secrets and variables → Actions)
+
+   | Secret | Value |
+   |--------|-------|
+   | `AZURE_CREDENTIALS` | Full JSON output from `az ad sp create-for-rbac --sdk-auth` |
+   | `TF_API_TOKEN` | Terraform Cloud → User Settings → Tokens |
+   | `SSH_PRIVATE_KEY` | Content of `~/.ssh/id_ed25519` (private key) |
+   | `VM_ADMIN_USERNAME` | `azureuser` |
+   | `ACR_NAME` | Same as Terraform variable |
+   | `JWT_SECRET` | Output of `openssl rand -base64 32` |
+
+4. **Push to GitHub — first merge to main**
+
+   Create a feature branch, open a PR (CI and Terraform plan run), then merge. Terraform Cloud automatically applies and provisions all Azure infrastructure.
+
+5. **Set remaining secrets after Terraform completes**
+   ```bash
+   # From Terraform Cloud outputs or CLI:
+   terraform output bastion_public_ip           # → BASTION_IP secret
+   terraform output app_vm_private_ip           # → VM_PRIVATE_IP secret
+   terraform output cosmosdb_connection_string  # → MONGO_URI secret
+
+   az acr credential show --name <acr_name>
+   # → ACR_USERNAME and ACR_PASSWORD secrets
+   ```
+
+6. **Re-run the CD pipeline** from GitHub Actions tab — it will now succeed and deploy the application.
+
+### Tearing Down
+
+```bash
+# In Terraform Cloud UI → workspace → Actions → Destroy
+# OR locally:
+cd terraform/
+terraform destroy
+```
+
+Verify all resources are removed in the Azure Portal. Check for any orphaned resources (Public IPs, NICs) that may need manual deletion.
+
+---
+
+## Security Measures
+
+### Container Image Scanning (Trivy)
+Every Docker image built in CI is scanned for `CRITICAL` and `HIGH` vulnerabilities. The build fails if any fixable vulnerabilities are found. This applies to the backend image and frontend image.
+
+### Infrastructure as Code Scanning (tfsec)
+All Terraform code is scanned by `tfsec` on every pull request. Misconfigurations (e.g. overly permissive rules) fail the build. Intentional exceptions (e.g. bastion SSH open to internet for GitHub Actions runners) are documented with `#tfsec:ignore:` comments directly in the `.tf` file.
+
+### Network Security
+- The **App VM has no public IP**. It is only reachable via the bastion host.
+- **NSG rules** restrict SSH and app traffic to the bastion subnet only (10.0.1.0/24).
+- The **bastion** is the only public entry point and only serves HTTP traffic via nginx.
+
+### Secret Management
+All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credentials) are stored as **GitHub Secrets** and injected at runtime. No secrets are committed to the repository.
+
+### Application Security
+- Passwords are hashed with **bcryptjs** (12 salt rounds).
+- All authenticated routes require a valid **JWT token**.
+- Admin routes enforce **role-based access control**.
+- Docker containers run as **non-root users**.
+
+---
+
+## Challenges & Solutions
+
+| Challenge | Solution |
+|-----------|----------|
+| **Azure VM sizes unavailable in South Africa North** | The B-series VM sizes (`Standard_B1s`, `Standard_B2s`, `Standard_B2ms`) were all unavailable due to capacity restrictions. Switched to DS-series (`Standard_DS1_v2` for bastion, `Standard_D2s_v3` for app VM) which are reliably available in the region. |
+| **Ubuntu 22.04 wrong Azure image offer** | The `UbuntuServer` offer only supports up to Ubuntu 18.04. Ubuntu 22.04 requires the `0001-com-ubuntu-server-jammy` offer — a non-obvious Azure naming convention not clearly documented. |
+| **Azure does not support ed25519 SSH keys** | Azure Linux VMs only accept RSA SSH keys. Had to regenerate key pair with `ssh-keygen -t rsa -b 4096` and update Terraform Cloud and GitHub Secrets. |
+| **CosmosDB network restriction** | Needed the database to be inaccessible from the public internet. Used Azure VNet service endpoint rules to restrict CosmosDB access to the private subnet only, rather than a full private endpoint (which requires Premium tier). |
+| **`docker-compose-plugin` not in Ubuntu default repos** | The Docker Compose v2 plugin requires the official Docker apt repository. Added GPG key and Docker apt source to Ansible before installing the package. |
+| **Frontend nginx crash-looping in container** | Running nginx with a custom non-root user caused `Permission denied` on `/var/cache/nginx/`. The `nginx:alpine` image's built-in `nginx` user already has correct permissions — removed the custom user from the Dockerfile. |
+| **Trivy scanning base-image CVEs we cannot fix** | Trivy flagged HIGH CVEs in `node:24-alpine`'s bundled npm internals (zlib, minimatch, tar). Since these are upstream issues outside our control, documented and accepted them in `.trivyignore` with justifications. |
+| **tfsec flagging intentional open security rules** | The bastion SSH rule must be open to `*` because GitHub Actions runners use dynamic IPs. Added `#tfsec:ignore:` comments directly in the Terraform file to document the intentional exception. |
+
+---
+
+## Video Demo
+
+_To be added after deployment._
+
+---
 
 ## License
 
