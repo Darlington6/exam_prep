@@ -82,7 +82,7 @@ jobs:
       # Step 3: Build and Push Production Images to ACR (with commit SHA tags for traceability)
       # Images are tagged with :latest AND the commit SHA for traceability.
       # The frontend image is rebuilt with the production API URL baked in
-      # (nginx on the bastion proxies /api -> backend, so no port needed).
+      # (nginx on the bastion proxies /api -> backend - no port needed).
 
       - name: Build and Tag Backend Image
         run: |
