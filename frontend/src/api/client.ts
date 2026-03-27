@@ -133,6 +133,8 @@ export const examApi = {
   getById: (id: string) => api.get<{ exam: Exam }>(`/exams/${id}`),
   getQuestions: (examId: string) => 
     api.get<{ questions: Question[] }>(`/exams/${examId}/questions`),
+  getReviewQuestions: (examId: string) =>
+    api.get<{ questions: Question[] }>(`/exams/${examId}/review`),
   submitAttempt: (examId: string, answers: Record<string, number>) =>
     api.post<{ attempt: ExamAttempt }>(`/exams/${examId}/submit`, { answers }),
   getAttempts: () => api.get<{ attempts: ExamAttempt[] }>('/exams/attempts'),

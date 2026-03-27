@@ -29,7 +29,7 @@ export function ExamResults() {
   const loadResults = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await examApi.getQuestions(examId || '');
+      const { data } = await examApi.getReviewQuestions(examId || '');
       setQuestions(data.questions);
     } catch (err: unknown) {
       console.error('Failed to load questions:', err);

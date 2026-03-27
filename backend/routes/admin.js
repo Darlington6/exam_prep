@@ -49,7 +49,7 @@ router.post('/exams', async (req, res) => {
     const exam = await Exam.create({
       title: String(title).trim(),
       description: description ? String(description).trim() : '',
-      category: String(category).trim(),
+      category: String(category).trim().toLowerCase(),
       difficulty,
       duration: Number(duration),
       passingScore: Number(passingScore),
@@ -74,7 +74,7 @@ router.put('/exams/:id', async (req, res) => {
     const { title, description, category, difficulty, duration, passingScore } = req.body;
     if (title !== undefined) exam.title = String(title).trim();
     if (description !== undefined) exam.description = String(description).trim();
-    if (category !== undefined) exam.category = String(category).trim();
+    if (category !== undefined) exam.category = String(category).trim().toLowerCase();
     if (difficulty !== undefined) exam.difficulty = difficulty;
     if (duration !== undefined) exam.duration = Number(duration);
     if (passingScore !== undefined) exam.passingScore = Number(passingScore);
@@ -301,7 +301,7 @@ router.post('/external/fetch', async (req, res) => {
       const exam = await Exam.create({
         title: category || items[0].category || 'Trivia Quiz',
         description: 'Imported from Open Trivia DB',
-        category: category || items[0].category || 'general',
+        category: (category || items[0].category || 'general').trim().toLowerCase(),
         difficulty: normalizeDifficulty(items[0].difficulty),
         duration: 30,
         passingScore: 60,
@@ -331,7 +331,7 @@ router.post('/external/fetch', async (req, res) => {
       const exam = await Exam.create({
         title: category || items[0].category || 'Quiz',
         description: 'Imported from QuizAPI',
-        category: category || items[0].category || 'general',
+        category: (category || items[0].category || 'general').trim().toLowerCase(),
         difficulty: normalizeDifficulty(items[0].difficulty),
         duration: 30,
         passingScore: 60,
@@ -373,7 +373,7 @@ router.post('/external/fetch', async (req, res) => {
           const exam = await Exam.create({
             title: String(item.title).trim(),
             description: item.description ? String(item.description).trim() : '',
-            category: category || item.category || 'general',
+            category: (category || item.category || 'general').trim().toLowerCase(),
             difficulty: normalizeDifficulty(item.difficulty),
             duration: Number(item.duration) || 30,
             passingScore: Number(item.passingScore) || 60,
