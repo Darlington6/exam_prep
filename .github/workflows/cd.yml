@@ -14,6 +14,7 @@ jobs:
       ACR_USERNAME: ""
       ACR_PASSWORD: ""
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
 
     steps:
       - name: Checkout code
@@ -161,5 +162,6 @@ jobs:
                 vm_private_ip=${{ secrets.VM_PRIVATE_IP }} \
                 domain=${{ env.BASTION_IP }}.sslip.io \
                 frontend_url=https://${{ env.BASTION_IP }}.sslip.io \
-                sendgrid_api_key='${{ env.SENDGRID_API_KEY }}'"
+                sendgrid_api_key='${{ env.SENDGRID_API_KEY }}' \
+                email_from='${{ env.EMAIL_FROM }}'"
                 
