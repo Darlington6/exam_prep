@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const examRoutes = require('./routes/exams');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
+const categoryRoutes = require('./routes/categories');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // catch-all error handler (must have 4 args so Express treats it as error middleware)
 app.use((err, req, res, _next) => {

@@ -28,7 +28,7 @@ const auth = async (req, res, next) => {
 
 const optionalAuth = async (req, res, next) => {
   const go = () => {
-    if (typeof next === 'function') next();
+    if (typeof next === 'function') next(); 
   };
   try {
     const authHeader = req.headers.authorization;
@@ -46,3 +46,4 @@ const optionalAuth = async (req, res, next) => {
 };
 
 module.exports = { auth, optionalAuth };
+// This file defines two middleware functions for Express.js: `auth` and `optionalAuth`. The `auth` middleware checks for a valid JWT token in the Authorization header, verifies it, and attaches the corresponding user to the request object. If the token is missing, invalid, or expired, it responds with a 401 status. The `optionalAuth` middleware does the same but allows requests without a token to proceed without attaching a user. Both functions use a helper function `go` to handle errors and call the next middleware.
