@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Call backend directly. Port 5001 to avoid conflict with macOS AirPlay (5000).
-const baseURL = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001'}/api`;
+// In production (Docker) VITE_API_URL is "" so baseURL becomes the relative path
+// "/api" — nginx proxies it to the backend container internally.
+// In local dev (npm run dev without Docker) it falls back to http://127.0.0.1:5001.
+const apiRoot = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:5001';
+const baseURL = `${apiRoot}/api`;
 
 export const api = axios.create({
   baseURL,
