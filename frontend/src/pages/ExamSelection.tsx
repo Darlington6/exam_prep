@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { examApi, type Exam } from '../api/client';
+import { Footer } from '../components/Footer';
 import '../styles/ExamSelection.css';
 
 const categoryNames: Record<string, string> = {
@@ -100,12 +101,22 @@ export function ExamSelection() {
             </button>
           </div>
         ) : exams.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📝</div>
-            <h2>No Exams Available Yet</h2>
-            <p>Check back later for exams in this category.</p>
-            <button className="btn-primary" onClick={handleBack}>
-              Browse Other Categories
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-3xl mb-4">
+              📭
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              No exams in this category yet
+            </h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
+              This category has been created but no exams have been added yet.
+              Check back soon or explore other categories.
+            </p>
+            <button
+              onClick={() => navigate(-1)}
+              className="mt-6 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-5 py-2.5 rounded-lg transition-colors"
+            >
+              ← Browse other categories
             </button>
           </div>
         ) : (
@@ -196,6 +207,7 @@ export function ExamSelection() {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

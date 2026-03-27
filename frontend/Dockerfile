@@ -9,8 +9,10 @@ RUN npm install
 COPY . .
 
 # Accept the API URL at build time so Vite can embed it into the static bundle.
-# The CD pipeline passes this as: --build-arg VITE_API_URL=http://<bastion-ip>/api
-ARG VITE_API_URL=http://localhost:5001
+# Default is empty string: the frontend uses relative /api/* URLs and nginx
+# proxies them to the backend container — no hardcoded IP needed.
+# Override only if you are NOT using the nginx reverse-proxy (e.g. a split-host setup).
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build

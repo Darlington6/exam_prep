@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { examApi, type Question } from '../api/client';
+import { Footer } from '../components/Footer';
 import '../styles/ExamResults.css';
 
 interface ExamAttempt {
@@ -202,6 +203,7 @@ export function ExamResults() {
           </button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

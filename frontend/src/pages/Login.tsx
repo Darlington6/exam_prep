@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
+import { Footer } from '../components/Footer';
 
 function EyeIcon() {
   return (
@@ -54,7 +55,8 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4">
+    <div className="flex flex-col min-h-screen w-full">
+      <div className="flex flex-1 items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-xl border border-white/10 bg-white/5 p-6 shadow-2xl sm:p-8">
         <h1 className="auth-title">Log in</h1>
         <p className="mb-6 text-sm text-[#888]">Exam Prep</p>
@@ -115,6 +117,8 @@ export function Login() {
           Don’t have an account? <Link to="/register">Register</Link>
         </p>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }
