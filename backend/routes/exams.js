@@ -10,8 +10,9 @@ const { auth } = require('../middleware/auth');
 // GET /api/exams/category/:category
 router.get('/category/:category', auth, async (req, res) => {
   try {
+    const normalizedCategory = req.params.category.trim().toLowerCase();
     const exams = await Exam.find({
-      category: req.params.category,
+      category: normalizedCategory,
       isActive: true,
     }).sort({ createdAt: -1 });
     res.json({ exams });
@@ -42,6 +43,33 @@ router.get('/:id', auth, async (req, res) => {
   } catch (err) {
     console.error('Get exam error:', err.message);
     res.status(500).json({ message: 'Failed to load exam.' });
+  }
+});
+
+// GET /api/exams/:id/review
+// Returns questions WITH isCorrect included, but only after the user has submitted an attempt.
+// This is the endpoint used by the results / answer-review screen.
+router.get('/:id/review', auth, async (req, res) => {
+  try {
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) return res.status(404).json({ message: 'Exam not found.' });
+
+    // Security gate: only expose correct answers if the user actually attempted this exam
+    const attempt = await ExamAttempt.findOne({
+      examId: req.params.id,
+      userId: req.user._id,
+    });
+    if (!attempt) {
+      return res.status(403).json({ message: 'No completed attempt found for this exam.' });
+    }
+
+    const questions = await Question.find({ examId: req.params.id })
+      .sort({ order: 1, createdAt: 1 });
+
+    res.json({ questions });
+  } catch (err) {
+    console.error('Get review questions error:', err.message);
+    res.status(500).json({ message: 'Failed to load review questions.' });
   }
 });
 
