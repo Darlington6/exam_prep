@@ -34,6 +34,7 @@ app.use((err, req, res, _next) => {
 if (require.main === module) {
   mongoose.connect(process.env.MONGO_URI, { dbName: 'exam_prep_db' })
     .then(() => {
+      
       console.log('MongoDB connected');
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
