@@ -13,7 +13,7 @@ This directory contains the Ansible playbook that configures the Azure VMs after
 4. Adds the admin user to the `docker` group
 5. Creates `/opt/exam-prep/` application directory
 6. Copies `docker-compose.prod.yml` to the VM
-7. Writes a `.env` file with production secrets (MONGO_URI, JWT_SECRET, ACR credentials)
+7. Writes a `.env` file with production secrets (MONGO_URI, JWT_SECRET, ACR_LOGIN_SERVER, FRONTEND_URL, SENDGRID_API_KEY, EMAIL_FROM)
 8. Logs in to Azure Container Registry
 9. Runs `docker compose up -d --pull always` to start/update the application
 
@@ -24,7 +24,7 @@ This directory contains the Ansible playbook that configures the Azure VMs after
    - `/` → frontend container on App VM (port 3000)
 3. Enables the site and removes the default nginx config
 4. Starts nginx
-5. Runs certbot to obtain a Let's Encrypt TLS certificate for the sslip.io domain and configures HTTPS with automatic HTTP → HTTPS redirect
+5. Runs certbot to obtain a Let's Encrypt TLS certificate for the DuckDNS domain (`examprep-app.duckdns.org`) and configures HTTPS with automatic HTTP → HTTPS redirect
 
 ## SSH Architecture
 
@@ -68,9 +68,12 @@ ansible-playbook -i ansible/inventory.ini ansible/deploy.yml \
       mongo_uri='<cosmosdb-connection-string>' \
       jwt_secret='<jwt-secret>' \
       vm_private_ip=<app-vm-private-ip> \
-      domain=<bastion-ip>.sslip.io"
+      domain=examprep-app.duckdns.org \
+      frontend_url=https://examprep-app.duckdns.org \
+      sendgrid_api_key='<sendgrid-api-key>' \
+      email_from='<verified-sender-email>'"
 ```
 
 ## CD Integration
 
-In the CD pipeline, `inventory.ini` is generated dynamically from GitHub Secrets so that live IP addresses are never committed to the repository. The domain is constructed automatically as `${{ secrets.BASTION_IP }}.sslip.io`. See `.github/workflows/cd.yml` for the full automation.
+In the CD pipeline, `inventory.ini` is generated dynamically from GitHub Secrets so that live IP addresses are never committed to the repository. ACR credentials, CosmosDB URI, and bastion IP are fetched live from Azure on every run — no manual secret updates needed after `terraform destroy+apply`. The domain is always `examprep-app.duckdns.org`, updated automatically via the DuckDNS API. See `.github/workflows/cd.yml` for the full automation.

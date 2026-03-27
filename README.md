@@ -4,7 +4,7 @@
 
 ## Live Application
 
-**URL:** [https://20.164.200.14.sslip.io](https://20.164.200.14.sslip.io)
+**URL:** [https://examprep-app.duckdns.org](https://examprep-app.duckdns.org)
 
 ---
 
@@ -46,6 +46,7 @@ Schools and training centers
 ### Core Features
 
 - **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password hashing
+- **Password Reset**: Email-based password reset flow via SendGrid — users receive a time-limited reset link
 
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
 - **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions
@@ -71,7 +72,7 @@ graph TB
 
     subgraph Azure[Azure Virtual Network — 10.0.0.0/16]
         subgraph Public[Public Subnet — 10.0.1.0/24]
-            Bastion[Bastion Host\nnginx reverse proxy\nPublic IP :80]
+            Bastion[Bastion Host\nnginx reverse proxy + TLS\nexamprep-app.duckdns.org]
         end
         subgraph Private[Private Subnet — 10.0.2.0/24]
             AppVM[App VM\nDocker + Docker Compose\nbackend :5001 · frontend :3000]
@@ -84,7 +85,7 @@ graph TB
     ACR -->|docker pull| AppVM
     AppVM --> CosmosDB
 
-    Users[Users / Browser] -->|HTTP :80| Bastion
+    Users[Users / Browser] -->|HTTPS :443| Bastion
     Bastion -->|proxy /api → :5001| AppVM
     Bastion -->|proxy / → :3000| AppVM
 ```
@@ -363,12 +364,16 @@ All checks must pass before a pull request can be merged to `main`.
 | ---- | ----------- |
 | CI checks | All lint, test, and security scans run before any deployment |
 | Azure login | Authenticates with service principal |
+| Fetch live infra values | Dynamically retrieves bastion IP, ACR credentials, and CosmosDB URI from Azure — self-healing after `terraform destroy+apply` |
+| Update DuckDNS | Points `examprep-app.duckdns.org` at the current bastion IP — permanent domain regardless of IP changes |
 | Docker build + push | Builds images tagged with `:latest` and commit SHA, pushes to ACR |
 | SSH setup | Writes private key, adds bastion to known_hosts |
-| Ansible inventory | Dynamically generates `inventory.ini` with live IPs from GitHub Secrets |
-| Ansible deploy | Configures app VM (Docker, images, `docker compose up`) + bastion (nginx proxy) |
+| Ansible inventory | Dynamically generates `inventory.ini` with live IPs |
+| Ansible deploy | Configures app VM (Docker, images, `.env`, `docker compose up`) + bastion (nginx + Let's Encrypt TLS) |
 
 ### Required GitHub Secrets
+
+> `ACR_USERNAME`, `ACR_PASSWORD`, `MONGO_URI`, and `BASTION_IP` are **no longer stored as secrets** — the CD pipeline fetches them live from Azure after every deploy, so they stay correct even after `terraform destroy+apply`.
 
 | Secret | Where to get it |
 | ------ | --------------- |
@@ -377,12 +382,14 @@ All checks must pass before a pull request can be merged to `main`.
 | `SSH_PRIVATE_KEY` | Private half of the key pair set in Terraform Cloud |
 | `VM_ADMIN_USERNAME` | `azureuser` (default) |
 | `ACR_NAME` | e.g. `examprepregistry` |
-| `ACR_USERNAME` | `az acr credential show --name <acr_name>` (after `terraform apply`) |
-| `ACR_PASSWORD` | `az acr credential show --name <acr_name>` (after `terraform apply`) |
-| `MONGO_URI` | `terraform output cosmosdb_connection_string` (after `terraform apply`) |
 | `JWT_SECRET` | `openssl rand -base64 32` |
-| `BASTION_IP` | `terraform output bastion_public_ip` (after `terraform apply`) |
 | `VM_PRIVATE_IP` | `terraform output app_vm_private_ip` (after `terraform apply`) |
+| `RESOURCE_GROUP` | `exam-prep-group` (your Azure resource group name) |
+| `COSMOSDB_ACCOUNT_NAME` | `exam-prep-cosmos-db` (your CosmosDB account name) |
+| `DUCKDNS_TOKEN` | DuckDNS dashboard → your token |
+| `DUCKDNS_DOMAIN` | `examprep-app` (subdomain only, without `.duckdns.org`) |
+| `SENDGRID_API_KEY` | SendGrid/Twilio dashboard → API Keys |
+| `EMAIL_FROM` | The verified sender address (e.g. `desmondtunyinko6@gmail.com`) |
 
 ---
 
@@ -390,11 +397,13 @@ All checks must pass before a pull request can be merged to `main`.
 
 ### Authentication (`/api/auth`)
 
-| Method | Endpoint    | Description              | Auth |
-| ------ | ----------- | ------------------------ | ---- |
-| POST   | `/register` | Create a new account     | No   |
-| POST   | `/login`    | Login and receive JWT    | No   |
-| GET    | `/me`       | Get current user profile | Yes  |
+| Method | Endpoint           | Description                          | Auth |
+| ------ | ------------------ | ------------------------------------ | ---- |
+| POST   | `/register`        | Create a new account                 | No   |
+| POST   | `/login`           | Login and receive JWT                | No   |
+| GET    | `/me`              | Get current user profile             | Yes  |
+| POST   | `/forgot-password` | Send password reset link via email   | No   |
+| POST   | `/reset-password`  | Reset password using token from link | No   |
 
 ### Student Exams (`/api/exams`)
 
@@ -520,10 +529,16 @@ exam_prep/
    |--------|-------|
    | `AZURE_CREDENTIALS` | Full JSON output from `az ad sp create-for-rbac --sdk-auth` |
    | `TF_API_TOKEN` | Terraform Cloud → User Settings → Tokens |
-   | `SSH_PRIVATE_KEY` | Content of `~/.ssh/id_ed25519` (private key) |
+   | `SSH_PRIVATE_KEY` | Content of `~/.ssh/id_rsa` (private key — must be RSA) |
    | `VM_ADMIN_USERNAME` | `azureuser` |
    | `ACR_NAME` | Same as Terraform variable |
    | `JWT_SECRET` | Output of `openssl rand -base64 32` |
+   | `RESOURCE_GROUP` | `exam-prep-group` |
+   | `COSMOSDB_ACCOUNT_NAME` | Your CosmosDB account name |
+   | `DUCKDNS_TOKEN` | From DuckDNS dashboard |
+   | `DUCKDNS_DOMAIN` | `examprep-app` |
+   | `SENDGRID_API_KEY` | From SendGrid/Twilio dashboard |
+   | `EMAIL_FROM` | Your verified SendGrid sender address |
 
 4. **Push to GitHub — first merge to main**
 
@@ -531,14 +546,11 @@ exam_prep/
 
 5. **Set remaining secrets after Terraform completes**
    ```bash
-   # From Terraform Cloud outputs or CLI:
-   terraform output bastion_public_ip           # → BASTION_IP secret
+   # The only value still needed as a secret after apply:
    terraform output app_vm_private_ip           # → VM_PRIVATE_IP secret
-   terraform output cosmosdb_connection_string  # → MONGO_URI secret
-
-   az acr credential show --name <acr_name>
-   # → ACR_USERNAME and ACR_PASSWORD secrets
    ```
+
+   > ACR credentials, CosmosDB URI, and bastion IP are fetched automatically by the CD pipeline on every run — no manual secret updates needed after `terraform destroy+apply`.
 
 6. **Re-run the CD pipeline** from GitHub Actions tab — it will now succeed and deploy the application.
 
@@ -591,6 +603,9 @@ All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credenti
 | **Frontend nginx crash-looping in container** | Running nginx with a custom non-root user caused `Permission denied` on `/var/cache/nginx/`. The `nginx:alpine` image's built-in `nginx` user already has correct permissions — removed the custom user from the Dockerfile. |
 | **Trivy scanning base-image CVEs we cannot fix** | Trivy flagged HIGH CVEs in `node:24-alpine`'s bundled npm internals (zlib, minimatch, tar). Since these are upstream issues outside our control, documented and accepted them in `.trivyignore` with justifications. |
 | **tfsec flagging intentional open security rules** | The bastion SSH rule must be open to `*` because GitHub Actions runners use dynamic IPs. Added `#tfsec:ignore:` comments directly in the Terraform file to document the intentional exception. |
+| **ACR/CosmosDB credentials stale after destroy+apply** | Terraform destroy regenerates ACR passwords and CosmosDB connection strings. Storing them as static GitHub Secrets meant every redeploy required manual updates. Fixed by fetching all three values dynamically via Azure CLI in the CD pipeline (`az acr credential show`, `az cosmosdb keys list`, `az network public-ip show`). |
+| **IP-based domain changes after every destroy+apply** | Using `sslip.io` embeds the bastion IP in the domain name, so the live URL changed on every infrastructure cycle. Fixed by registering a free DuckDNS subdomain (`examprep-app.duckdns.org`) and adding a pipeline step to update the DNS record with the new IP automatically. |
+| **SendGrid requires verified sender address** | Sending from a placeholder `noreply@examprep.com` address was rejected by SendGrid because the domain was not owned or authenticated. Fixed by using Single Sender Verification in SendGrid with a real Gmail address, and passing `EMAIL_FROM` as a GitHub Secret. |
 
 ---
 

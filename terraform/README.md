@@ -66,13 +66,20 @@ Set these in **Terraform Cloud → Workspace → Variables**:
 
 ## Outputs
 
-After `terraform apply`, retrieve these values to configure GitHub Secrets:
+After `terraform apply`, only one value needs to be saved as a GitHub Secret:
 
 ```bash
-terraform output bastion_public_ip           # → BASTION_IP secret
 terraform output app_vm_private_ip           # → VM_PRIVATE_IP secret
-terraform output acr_login_server            # → ACR name base
-terraform output -raw cosmosdb_connection_string  # → MONGO_URI secret (sensitive)
+```
+
+> **ACR credentials, CosmosDB URI, and bastion IP are fetched automatically** by the CD pipeline on every run using `az acr credential show`, `az cosmosdb keys list`, and `az network public-ip show`. You no longer need to store or manually update `ACR_USERNAME`, `ACR_PASSWORD`, `MONGO_URI`, or `BASTION_IP` as secrets after a destroy+apply cycle.
+
+Other outputs (for reference):
+
+```bash
+terraform output bastion_public_ip           # informational — DuckDNS update is automated
+terraform output acr_login_server            # informational
+terraform output -raw cosmosdb_connection_string  # informational (sensitive)
 ```
 
 ## Deploying
