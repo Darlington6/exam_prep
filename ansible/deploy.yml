@@ -84,6 +84,7 @@
           FRONTEND_URL={{ frontend_url }}
           SENDGRID_API_KEY={{ sendgrid_api_key }}
           EMAIL_FROM={{ email_from }}
+          GMAIL_APP_PASSWORD={{ gmail_app_password }}
         dest: "{{ app_dir }}/.env"
         mode: "0600" # restrict read to owner only — contains secrets
 

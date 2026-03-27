@@ -46,7 +46,7 @@ Schools and training centers
 ### Core Features
 
 - **User Registration and Authentication**: Secure account creation and login with JWT tokens and bcrypt password hashing
-- **Password Reset**: Email-based password reset flow via SendGrid — users receive a time-limited reset link
+- **Password Reset**: Email-based password reset flow via Gmail SMTP — users receive a time-limited reset link
 
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
 - **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions
@@ -388,8 +388,9 @@ All checks must pass before a pull request can be merged to `main`.
 | `COSMOSDB_ACCOUNT_NAME` | `exam-prep-cosmos-db` (your CosmosDB account name) |
 | `DUCKDNS_TOKEN` | DuckDNS dashboard → your token |
 | `DUCKDNS_DOMAIN` | `examprep-app` (subdomain only, without `.duckdns.org`) |
-| `SENDGRID_API_KEY` | SendGrid/Twilio dashboard → API Keys |
-| `EMAIL_FROM` | The verified sender address (e.g. `desmondtunyinko6@gmail.com`) |
+| `SENDGRID_API_KEY` | SendGrid/Twilio dashboard → API Keys (kept for reference) |
+| `EMAIL_FROM` | Gmail address to send from (e.g. `desmondtunyinko6@gmail.com`) |
+| `GMAIL_APP_PASSWORD` | Google Account → Security → App Passwords |
 
 ---
 
@@ -537,8 +538,8 @@ exam_prep/
    | `COSMOSDB_ACCOUNT_NAME` | Your CosmosDB account name |
    | `DUCKDNS_TOKEN` | From DuckDNS dashboard |
    | `DUCKDNS_DOMAIN` | `examprep-app` |
-   | `SENDGRID_API_KEY` | From SendGrid/Twilio dashboard |
-   | `EMAIL_FROM` | Your verified SendGrid sender address |
+   | `EMAIL_FROM` | Gmail address to send password reset emails from |
+   | `GMAIL_APP_PASSWORD` | Google Account → Security → App Passwords |
 
 4. **Push to GitHub — first merge to main**
 
@@ -605,7 +606,7 @@ All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credenti
 | **tfsec flagging intentional open security rules** | The bastion SSH rule must be open to `*` because GitHub Actions runners use dynamic IPs. Added `#tfsec:ignore:` comments directly in the Terraform file to document the intentional exception. |
 | **ACR/CosmosDB credentials stale after destroy+apply** | Terraform destroy regenerates ACR passwords and CosmosDB connection strings. Storing them as static GitHub Secrets meant every redeploy required manual updates. Fixed by fetching all three values dynamically via Azure CLI in the CD pipeline (`az acr credential show`, `az cosmosdb keys list`, `az network public-ip show`). |
 | **IP-based domain changes after every destroy+apply** | Using `sslip.io` embeds the bastion IP in the domain name, so the live URL changed on every infrastructure cycle. Fixed by registering a free DuckDNS subdomain (`examprep-app.duckdns.org`) and adding a pipeline step to update the DNS record with the new IP automatically. |
-| **SendGrid requires verified sender address** | Sending from a placeholder `noreply@examprep.com` address was rejected by SendGrid because the domain was not owned or authenticated. Fixed by using Single Sender Verification in SendGrid with a real Gmail address, and passing `EMAIL_FROM` as a GitHub Secret. |
+| **SendGrid DMARC rejection for Gmail senders** | Sending from a `@gmail.com` address via SendGrid was deferred/rejected by Gmail because Gmail's DMARC policy requires emails from `@gmail.com` to originate from Google's own servers. Fixed by switching to Gmail SMTP (nodemailer) for email delivery, which is always DMARC-aligned. |
 
 ---
 
