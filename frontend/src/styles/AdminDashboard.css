@@ -56,6 +56,17 @@
   color: white;
 }
 
+.nav-breadcrumb {
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0 0.5rem;
+  pointer-events: none;
+  user-select: none;
+}
+
 .admin-content {
   flex: 1;
   padding: 2rem;

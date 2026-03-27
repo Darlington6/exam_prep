@@ -111,12 +111,19 @@ export function ExternalAPIFetch({ onSuccess, onCancel }: ExternalAPIFetchProps)
         </div>
 
         <div className="api-info-box">
-          <h4>📌 API Requirements</h4>
+          <h4>📌 Supported API Formats</h4>
           <ul>
-            <li>The API should return exam data in JSON format</li>
-            <li>Expected structure includes exam metadata and questions</li>
-            <li>Questions should have multiple-choice options</li>
-            <li>Each question should indicate the correct answer(s)</li>
+            <li>
+              <strong>Open Trivia DB</strong> —{' '}
+              <code>https://opentdb.com/api.php?amount=10&amp;type=multiple</code>
+            </li>
+            <li>
+              <strong>QuizAPI</strong> —{' '}
+              <code>https://quizapi.io/api/v1/questions?limit=10&amp;apiKey=YOUR_KEY</code>
+            </li>
+            <li>
+              <strong>Custom format</strong> — a JSON array (or <code>{'{"exams":[...]}'}</code>) where each object has a <code>title</code> field and optionally a <code>questions</code> array
+            </li>
           </ul>
         </div>
 

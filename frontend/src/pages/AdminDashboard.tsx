@@ -12,19 +12,28 @@ export function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabView>('exams');
   const [editingExamId, setEditingExamId] = useState<string | null>(null);
+  const [managingExamId, setManagingExamId] = useState<string | null>(null);
 
   // If not admin, redirect to regular dashboard
   if (user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const handleGoToExams = () => {
+    setActiveTab('exams');
+    setEditingExamId(null);
+    setManagingExamId(null);
+  };
+
   const handleCreateNew = () => {
     setEditingExamId(null);
+    setManagingExamId(null);
     setActiveTab('create-exam');
   };
 
   const handleEditExam = (examId: string) => {
     setEditingExamId(examId);
+    setManagingExamId(null);
     setActiveTab('create-exam');
   };
 
@@ -55,8 +64,8 @@ export function AdminDashboard() {
 
       <nav className="admin-nav">
         <button
-          className={activeTab === 'exams' ? 'active' : ''}
-          onClick={() => setActiveTab('exams')}
+          className={activeTab === 'exams' && !managingExamId ? 'active' : ''}
+          onClick={handleGoToExams}
         >
           All Exams
         </button>
@@ -68,15 +77,24 @@ export function AdminDashboard() {
         </button>
         <button
           className={activeTab === 'fetch-api' ? 'active' : ''}
-          onClick={() => setActiveTab('fetch-api')}
+          onClick={() => { setActiveTab('fetch-api'); setManagingExamId(null); }}
         >
           Fetch from API
         </button>
+        {managingExamId && (
+          <span className="nav-breadcrumb">› Manage Questions</span>
+        )}
       </nav>
 
       <main className="admin-content">
         {activeTab === 'exams' && (
-          <ExamList onEdit={handleEditExam} onCreate={handleCreateNew} />
+          <ExamList
+            onEdit={handleEditExam}
+            onCreate={handleCreateNew}
+            managingExamId={managingExamId}
+            onManageQuestions={setManagingExamId}
+            onCloseQuestions={() => setManagingExamId(null)}
+          />
         )}
         {activeTab === 'create-exam' && (
           <ExamForm
