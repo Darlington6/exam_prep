@@ -13,6 +13,7 @@ jobs:
       MONGO_URI: ""
       ACR_USERNAME: ""
       ACR_PASSWORD: ""
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
 
     steps:
       - name: Checkout code
@@ -158,5 +159,7 @@ jobs:
                 mongo_uri='${{ env.MONGO_URI }}' \
                 jwt_secret='${{ secrets.JWT_SECRET }}' \
                 vm_private_ip=${{ secrets.VM_PRIVATE_IP }} \
-                domain=${{ env.BASTION_IP }}.sslip.io"
+                domain=${{ env.BASTION_IP }}.sslip.io \
+                frontend_url=https://${{ env.BASTION_IP }}.sslip.io \
+                sendgrid_api_key='${{ env.SENDGRID_API_KEY }}'"
                 
