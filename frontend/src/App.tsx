@@ -14,7 +14,6 @@ import { ExamCategories } from './pages/ExamCategories';
 import { ExamSelection } from './pages/ExamSelection';
 import { ExamTaking } from './pages/ExamTaking';
 import { ExamResults } from './pages/ExamResults';
-import { Footer } from './components/Footer';
 import './App.css';
 
 function HomeOrDashboard() {
@@ -93,7 +92,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-        <Footer />
       </AuthProvider>
     </BrowserRouter>
   );

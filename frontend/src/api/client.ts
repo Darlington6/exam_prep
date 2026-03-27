@@ -76,6 +76,16 @@ export interface Question {
   updatedAt: string;
 }
 
+export interface Category {
+  id: string;    // lowercase slug, used in URLs
+  name: string;  // display name (title-cased)
+  count: number; // number of active exams
+}
+
+export const categoriesApi = {
+  getAll: () => api.get<{ categories: Category[] }>('/categories'),
+};
+
 export interface CreateExamData {
   title: string;
   description: string;

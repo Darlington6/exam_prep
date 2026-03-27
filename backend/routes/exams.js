@@ -10,9 +10,11 @@ const { auth } = require('../middleware/auth');
 // GET /api/exams/category/:category
 router.get('/category/:category', auth, async (req, res) => {
   try {
-    const normalizedCategory = req.params.category.trim().toLowerCase();
+    // Escape regex special chars to prevent ReDoS, then match case-insensitively
+    // so "Mathematics" and "mathematics" both resolve correctly.
+    const escaped = req.params.category.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const exams = await Exam.find({
-      category: normalizedCategory,
+      category: { $regex: new RegExp(`^${escaped}$`, 'i') },
       isActive: true,
     }).sort({ createdAt: -1 });
     res.json({ exams });

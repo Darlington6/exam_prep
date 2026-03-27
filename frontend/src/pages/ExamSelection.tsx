@@ -13,6 +13,11 @@ const categoryNames: Record<string, string> = {
   general: 'General Knowledge'
 };
 
+// Fallback: title-case the raw slug for any category not in the static map
+function formatCategoryName(slug: string): string {
+  return slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
+}
+
 const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'] as const;
 
 export function ExamSelection() {
@@ -69,7 +74,7 @@ export function ExamSelection() {
             <button className="btn-back" onClick={handleBack}>
               ← Back to Categories
             </button>
-            <h1>{categoryNames[categoryId || ''] || 'Exams'}</h1>
+            <h1>{categoryNames[categoryId || ''] || (categoryId ? formatCategoryName(categoryId) : 'Exams')}</h1>
           </div>
           <div className="header-actions">
             {user?.role === 'admin' && (
