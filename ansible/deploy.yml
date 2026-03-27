@@ -81,6 +81,8 @@
           MONGO_URI={{ mongo_uri }}
           JWT_SECRET={{ jwt_secret }}
           ACR_LOGIN_SERVER={{ acr_login_server }}
+          FRONTEND_URL={{ frontend_url }}
+          SENDGRID_API_KEY={{ sendgrid_api_key }}
         dest: "{{ app_dir }}/.env"
         mode: "0600" # restrict read to owner only — contains secrets
 

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { api } from '../api/client';
 
 export function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -49,7 +47,7 @@ export function ResetPassword() {
     setSubmitting(true);
 
     try {
-      await axios.post(`${API_URL}/auth/reset-password`, { token, password });
+      await api.post('/auth/reset-password', { token, password });
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');

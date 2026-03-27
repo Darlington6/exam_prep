@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { api } from '../api/client';
 
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -17,14 +15,14 @@ export function ForgotPassword() {
     setSubmitting(true);
 
     try {
-      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      const response = await api.post('/auth/forgot-password', { email });
       void response;
       setSuccess(true);
       setEmail('');
     } catch (err: unknown) {
       const ax = err as { code?: string; response?: { data?: { message?: string }; status?: number } } | null;
-      let msg = 'We couldn\u2019t send the reset email right now. Please try again in a few moments, or contact support if the issue persists.';
-      
+      let msg = "We couldn\u2019t send the reset email right now. Please try again in a few moments, or contact support if the issue persists.";
+
       if (ax?.code === 'ERR_NETWORK' || !ax?.response) {
         msg = "Unable to connect to the server. Please check your internet connection and try again.";
       } else if (ax?.code === 'ECONNABORTED') {
@@ -32,7 +30,6 @@ export function ForgotPassword() {
       } else if (ax.response?.status === 500) {
         msg = "We're experiencing technical difficulties. Please try again in a few moments.";
       } else if (ax.response?.status === 400 && ax.response?.data?.message) {
-        // Show validation errors directly
         msg = ax.response.data.message;
       } else if (ax.response?.data?.message) {
         msg = ax.response.data.message;
