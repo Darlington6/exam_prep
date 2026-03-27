@@ -15,6 +15,8 @@ jobs:
       ACR_PASSWORD: ""
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
+      DUCKDNS_DOMAIN: ${{ secrets.DUCKDNS_DOMAIN }}
 
     steps:
       - name: Checkout code
@@ -93,6 +95,10 @@ jobs:
           echo "BASTION_IP=$(az network public-ip show --resource-group ${{ secrets.RESOURCE_GROUP }} --name bastion-ip --query ipAddress -o tsv)" >> $GITHUB_ENV
           echo "MONGO_URI=$(az cosmosdb keys list --name ${{ secrets.COSMOSDB_ACCOUNT_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --type connection-strings --query 'connectionStrings[0].connectionString' -o tsv)" >> $GITHUB_ENV
 
+      - name: Update DuckDNS with current bastion IP
+        run: |
+          curl -s "https://www.duckdns.org/update?domains=${{ env.DUCKDNS_DOMAIN }}&token=${{ env.DUCKDNS_TOKEN }}&ip=${{ env.BASTION_IP }}"
+
       # Step 3: Build and Push Production Images to ACR (with commit SHA tags for traceability)
       # Images are tagged with :latest AND the commit SHA for traceability.
       # The frontend image is rebuilt with the production API URL baked in
@@ -108,7 +114,7 @@ jobs:
       - name: Build and Tag Frontend Image
         run: |
           docker build \
-            --build-arg VITE_API_URL=https://${{ env.BASTION_IP }}.sslip.io \
+            --build-arg VITE_API_URL=https://${{ env.DUCKDNS_DOMAIN }}.duckdns.org \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:latest \
             -t ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }} \
             ./frontend
@@ -160,8 +166,8 @@ jobs:
                 mongo_uri='${{ env.MONGO_URI }}' \
                 jwt_secret='${{ secrets.JWT_SECRET }}' \
                 vm_private_ip=${{ secrets.VM_PRIVATE_IP }} \
-                domain=${{ env.BASTION_IP }}.sslip.io \
-                frontend_url=https://${{ env.BASTION_IP }}.sslip.io \
+                domain=${{ env.DUCKDNS_DOMAIN }}.duckdns.org \
+                frontend_url=https://${{ env.DUCKDNS_DOMAIN }}.duckdns.org \
                 sendgrid_api_key='${{ env.SENDGRID_API_KEY }}' \
                 email_from='${{ env.EMAIL_FROM }}'"
                 
