@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Footer } from '../components/Footer';
 import '../styles/Dashboard.css';
 
 function getInitials(name: string) {
@@ -140,6 +141,7 @@ export function Dashboard() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
