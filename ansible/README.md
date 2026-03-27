@@ -13,7 +13,7 @@ This directory contains the Ansible playbook that configures the Azure VMs after
 4. Adds the admin user to the `docker` group
 5. Creates `/opt/exam-prep/` application directory
 6. Copies `docker-compose.prod.yml` to the VM
-7. Writes a `.env` file with production secrets (MONGO_URI, JWT_SECRET, ACR_LOGIN_SERVER, FRONTEND_URL, SENDGRID_API_KEY, EMAIL_FROM)
+7. Writes a `.env` file with production secrets (MONGO_URI, JWT_SECRET, ACR_LOGIN_SERVER, FRONTEND_URL, EMAIL_FROM, GMAIL_APP_PASSWORD)
 8. Logs in to Azure Container Registry
 9. Runs `docker compose up -d --pull always` to start/update the application
 
@@ -70,8 +70,8 @@ ansible-playbook -i ansible/inventory.ini ansible/deploy.yml \
       vm_private_ip=<app-vm-private-ip> \
       domain=examprep-app.duckdns.org \
       frontend_url=https://examprep-app.duckdns.org \
-      sendgrid_api_key='<sendgrid-api-key>' \
-      email_from='<verified-sender-email>'"
+      email_from='<gmail-sender-address>' \
+      gmail_app_password='<gmail-app-password>'"
 ```
 
 ## CD Integration

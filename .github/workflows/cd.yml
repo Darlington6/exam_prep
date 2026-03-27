@@ -17,6 +17,7 @@ jobs:
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
       DUCKDNS_DOMAIN: ${{ secrets.DUCKDNS_DOMAIN }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -169,5 +170,6 @@ jobs:
                 domain=${{ env.DUCKDNS_DOMAIN }}.duckdns.org \
                 frontend_url=https://${{ env.DUCKDNS_DOMAIN }}.duckdns.org \
                 sendgrid_api_key='${{ env.SENDGRID_API_KEY }}' \
-                email_from='${{ env.EMAIL_FROM }}'"
+                email_from='${{ env.EMAIL_FROM }}' \
+                gmail_app_password='${{ env.GMAIL_APP_PASSWORD }}'"
                 
