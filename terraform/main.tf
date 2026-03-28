@@ -217,7 +217,7 @@ resource "azurerm_linux_virtual_machine" "bastion" {
 }
 
 # App VM (Private Subnet)
-# Runs Docker containers — only reachable via bastion
+# Runs Docker containers — only reachable via bastion host, no public IP
 
 resource "azurerm_network_interface" "vm_nic" {
   name                = "vm-nic"
