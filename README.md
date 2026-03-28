@@ -61,6 +61,10 @@ Schools and training centers
 
 ## Architecture
 
+![Architecture Diagram](assets/architecture-diagram.png)
+
+**OR**
+
 ```mermaid
 graph TB
     Dev[Developer] -->|git push / PR| GitHub[GitHub Repository]
