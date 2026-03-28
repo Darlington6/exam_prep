@@ -168,7 +168,7 @@ graph TB
    FRONTEND_URL=http://localhost:5173
    ```
 
-   > **Note:** When running with Docker Compose the MongoDB host must be `mongo` (the service name), not `localhost`.
+   > **Note:** When running with Docker Compose the MongoDB host must be `mongo` (the service name), not `localhost`. Set `FRONTEND_URL=http://localhost:3000` (Docker) — not `5173` (Vite dev server) — so password reset links point to the correct port.
 
 3. **Start all services**
 
