@@ -205,12 +205,12 @@ router.post('/reset-password', async (req, res) => {
     }
 
     const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    }).select('+resetPasswordToken +resetPasswordExpires');
+    // Equality-only query avoids CosmosDB range-index requirement on resetPasswordExpires.
+    // Expiry is validated in JS after the lookup.
+    const user = await User.findOne({ resetPasswordToken: hashedToken })
+      .select('+resetPasswordToken +resetPasswordExpires');
 
-    if (!user) {
+    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
       return res.status(400).json({ message: 'Reset link is invalid or has expired. Please request a new one.' });
     }
 

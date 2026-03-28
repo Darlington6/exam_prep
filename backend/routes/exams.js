@@ -10,11 +10,11 @@ const { auth } = require('../middleware/auth');
 // GET /api/exams/category/:category
 router.get('/category/:category', auth, async (req, res) => {
   try {
-    // Escape regex special chars to prevent ReDoS, then match case-insensitively
-    // so "Mathematics" and "mathematics" both resolve correctly.
-    const escaped = req.params.category.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Categories are stored lowercase by admin routes, and the category param
+    // from the categories API is already the lowercase slug — exact equality is
+    // sufficient and avoids $regex which CosmosDB handles poorly.
     const exams = await Exam.find({
-      category: { $regex: new RegExp(`^${escaped}$`, 'i') },
+      category: req.params.category.trim().toLowerCase(),
       isActive: true,
     }).sort({ _id: -1 });
     res.json({ exams });
@@ -66,7 +66,7 @@ router.get('/:id/review', auth, async (req, res) => {
     }
 
     const questions = await Question.find({ examId: req.params.id })
-      .sort({ order: 1 });
+      .sort({ _id: 1 });
 
     res.json({ questions });
   } catch (err) {
@@ -83,7 +83,7 @@ router.get('/:id/questions', auth, async (req, res) => {
     if (!exam) return res.status(404).json({ message: 'Exam not found.' });
 
     const questions = await Question.find({ examId: req.params.id })
-      .sort({ order: 1 });
+      .sort({ _id: 1 });
 
     // Strip isCorrect and explanation from each question for security
     const sanitized = questions.map(q => {
@@ -109,7 +109,7 @@ router.post('/:id/submit', auth, async (req, res) => {
     const exam = await Exam.findById(req.params.id);
     if (!exam) return res.status(404).json({ message: 'Exam not found.' });
 
-    const questions = await Question.find({ examId: req.params.id }).sort({ order: 1 });
+    const questions = await Question.find({ examId: req.params.id }).sort({ _id: 1 });
     if (questions.length === 0) {
       return res.status(400).json({ message: 'This exam has no questions.' });
     }
