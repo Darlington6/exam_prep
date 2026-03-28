@@ -18,7 +18,7 @@ router.use(auth, requireAdmin);
 // GET /api/admin/exams
 router.get('/exams', async (req, res) => {
   try {
-    const exams = await Exam.find().sort({ createdAt: -1 });
+    const exams = await Exam.find().sort({ _id: -1 });
     res.json({ exams });
   } catch (err) {
     console.error('Admin get exams error:', err.message);
@@ -117,7 +117,7 @@ router.patch('/exams/:id/toggle-active', async (req, res) => {
 router.get('/exams/:examId/questions', async (req, res) => {
   try {
     const questions = await Question.find({ examId: req.params.examId })
-      .sort({ order: 1, createdAt: 1 });
+      .sort({ order: 1 });
     res.json({ questions });
   } catch (err) {
     res.status(500).json({ message: 'Failed to load questions.' });
