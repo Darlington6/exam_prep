@@ -18,6 +18,7 @@ export interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
@@ -93,11 +94,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event('auth-logout'));
   }, []);
 
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setState((s) => {
+      if (!s.user) return s;
+      const updated = { ...s.user, ...updates };
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      return { ...s, user: updated };
+    });
+  }, []);
+
   const value: AuthContextValue = {
     ...state,
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!state.user && !!state.token,
   };
 

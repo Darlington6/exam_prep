@@ -1,3 +1,9 @@
+.exam-results-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .exam-results-container {
   flex: 1;
   background-color: #f5f7fa;

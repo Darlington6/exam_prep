@@ -11,9 +11,10 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Always default to light — dark mode is an explicit user opt-in via html.dark-mode */
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,14 +22,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Dark-mode CSS custom properties applied to all pages ── */
+/* ── Dark-mode: applied globally when html.dark-mode class is present ── */
 html.dark-mode body,
 html.dark-mode #root {
   background-color: #0f172a;
   color: #f1f5f9;
 }
 
-/* Ensure light-background pages (exam/profile) use vars in dark mode */
+/* Ensure exam/category pages theme correctly in dark mode */
 html.dark-mode .exam-selection-container,
 html.dark-mode .exam-categories-container {
   background-color: #0f172a;
@@ -76,6 +77,291 @@ html.dark-mode .empty-state h2 {
   color: #f1f5f9;
 }
 
+/* ── Dashboard dark mode ──────────────────────────────────────────────── */
+html.dark-mode .dashboard-page {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+/* Nav */
+html.dark-mode .dashboard-page > nav {
+  background-color: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+html.dark-mode .dashboard-page > nav .text-indigo-950 {
+  color: #f1f5f9 !important;
+}
+
+/* Admin dashboard button in nav */
+html.dark-mode .dashboard-page .bg-indigo-50 {
+  background-color: #1e1b4b !important;
+}
+html.dark-mode .dashboard-page .hover\:bg-indigo-100:hover {
+  background-color: #312e81 !important;
+}
+html.dark-mode .dashboard-page nav .text-indigo-600 {
+  color: #a5b4fc !important;
+}
+
+/* Avatar button */
+html.dark-mode .dashboard-page .border-indigo-200 {
+  border-color: #4338ca !important;
+}
+
+/* Logout button in nav (standalone) */
+html.dark-mode .dashboard-page nav .bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Dropdown */
+html.dark-mode .dashboard-page .absolute.rounded-xl {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark-mode .dashboard-page .absolute .text-slate-900 { color: #f1f5f9 !important; }
+html.dark-mode .dashboard-page .absolute .text-slate-500 { color: #94a3b8 !important; }
+html.dark-mode .dashboard-page .absolute .text-slate-700 { color: #cbd5e1 !important; }
+html.dark-mode .dashboard-page .absolute .border-b,
+html.dark-mode .dashboard-page .absolute .border-t { border-color: #334155 !important; }
+html.dark-mode .dashboard-page .absolute .hover\:bg-slate-50:hover { background-color: #273449 !important; }
+html.dark-mode .dashboard-page .absolute .hover\:bg-red-50:hover { background-color: #450a0a !important; }
+
+/* Hero + feature sections */
+html.dark-mode .dashboard-page > main section.bg-white {
+  background-color: #0f172a !important;
+}
+html.dark-mode .dashboard-page .text-slate-900 { color: #f1f5f9 !important; }
+html.dark-mode .dashboard-page .text-slate-500 { color: #94a3b8 !important; }
+html.dark-mode .dashboard-page .text-slate-400 { color: #64748b !important; }
+html.dark-mode .dashboard-page .text-indigo-950 { color: #f1f5f9 !important; }
+html.dark-mode .dashboard-page .border-slate-100 { border-color: #1e293b !important; }
+html.dark-mode .dashboard-page .bg-\[radial-gradient\(ellipse_80\%_50\%_at_50\%_-10\%\,\#EEF2FF\,transparent\)\] {
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, #1e1b4b, transparent) !important;
+}
+
+/* Stats bar */
+html.dark-mode .dashboard-page section.bg-slate-50 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark-mode .dashboard-page .border-slate-200 { border-color: #334155 !important; }
+
+/* Feature cards */
+html.dark-mode .dashboard-page .rounded-2xl.bg-slate-50 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark-mode .dashboard-page .hover\:border-indigo-200:hover { border-color: #4338ca !important; }
+html.dark-mode .dashboard-page .bg-indigo-50.rounded-xl { background-color: #1e1b4b !important; }
+
+/* How it works */
+html.dark-mode .dashboard-page section.border-t.border-slate-100.bg-slate-50 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark-mode .dashboard-page .text-slate-600 { color: #94a3b8 !important; }
+html.dark-mode .dashboard-page .bg-indigo-200 { background-color: #334155 !important; }
+
+/* ── Global dark mode baseline for all Tailwind-based pages ───────────────────
+   These rules are unlayered CSS, so they beat @layer utilities (Tailwind)
+   without needing !important. More-specific dashboard-page rules still win. */
+html.dark-mode .bg-white           { background-color: #1e293b; }
+html.dark-mode .bg-slate-50        { background-color: #0f172a; }
+html.dark-mode .text-slate-900     { color: #f1f5f9; }
+html.dark-mode .text-slate-800     { color: #e2e8f0; }
+html.dark-mode .text-slate-700     { color: #cbd5e1; }
+html.dark-mode .text-slate-600     { color: #94a3b8; }
+html.dark-mode .text-slate-500     { color: #94a3b8; }
+html.dark-mode .text-slate-400     { color: #64748b; }
+html.dark-mode .text-indigo-950    { color: #f1f5f9; }
+html.dark-mode .text-indigo-600    { color: #a5b4fc; }
+html.dark-mode .border-slate-200   { border-color: #334155; }
+html.dark-mode .border-slate-100   { border-color: #273449; }
+html.dark-mode .bg-indigo-50       { background-color: #1e1b4b; }
+html.dark-mode .border-indigo-200  { border-color: #4338ca; }
+/* Hover states used across Navbar and buttons */
+html.dark-mode .hover\:bg-slate-50:hover   { background-color: #273449; }
+html.dark-mode .hover\:bg-slate-100:hover  { background-color: #334155; }
+html.dark-mode .hover\:bg-red-50:hover     { background-color: #450a0a; }
+html.dark-mode .hover\:bg-indigo-100:hover { background-color: #312e81; }
+
+/* Logout confirmation modal */
+html.dark-mode .logout-confirm-modal {
+  background-color: #1e293b !important;
+  border: 1px solid #334155;
+}
+html.dark-mode .logout-confirm-modal .text-slate-900 { color: #f1f5f9 !important; }
+html.dark-mode .logout-confirm-modal .text-slate-500 { color: #94a3b8 !important; }
+html.dark-mode .logout-confirm-modal .bg-slate-100 { background-color: #273449 !important; }
+html.dark-mode .logout-confirm-modal .text-slate-600 { color: #cbd5e1 !important; }
+html.dark-mode .logout-confirm-modal .hover\:bg-slate-200:hover { background-color: #334155 !important; }
+
+/* ── ExamTaking dark mode ─────────────────────────────────────────────────── */
+html.dark-mode .exam-taking-container  { background-color: #0f172a; }
+html.dark-mode .exam-header            { background-color: #1e293b; border-color: #334155; }
+html.dark-mode .exam-info h1           { color: #f1f5f9; }
+html.dark-mode .question-progress      { color: #94a3b8; }
+html.dark-mode .exam-timer             { background-color: #273449; }
+html.dark-mode .timer-value            { color: #f1f5f9; }
+html.dark-mode .question-palette       { background-color: #1e293b; }
+html.dark-mode .question-palette h3    { color: #f1f5f9; }
+html.dark-mode .palette-btn            { background-color: #273449; border-color: #334155; color: #94a3b8; }
+html.dark-mode .palette-btn:hover      { background-color: #334155; border-color: #667eea; }
+html.dark-mode .palette-legend         { border-color: #334155; }
+html.dark-mode .legend-item            { color: #94a3b8; }
+html.dark-mode .legend-dot             { background-color: #273449; border-color: #334155; }
+html.dark-mode .question-area          { background-color: #1e293b; }
+html.dark-mode .question-text          { color: #f1f5f9; }
+html.dark-mode .option-label           { border-color: #334155; }
+html.dark-mode .option-label:hover     { background-color: #273449; border-color: #475569; }
+html.dark-mode .option-label.selected  { background-color: #1e3a8a; border-color: #667eea; }
+html.dark-mode .option-letter          { background-color: #334155; color: #94a3b8; }
+html.dark-mode .option-label.selected .option-letter { background-color: #667eea; color: white; }
+html.dark-mode .option-text            { color: #cbd5e1; }
+html.dark-mode .question-navigation    { border-color: #334155; }
+html.dark-mode .nav-info               { color: #94a3b8; }
+html.dark-mode .btn-nav                { background-color: #1e293b; border-color: #334155; color: #cbd5e1; }
+html.dark-mode .btn-nav:hover:not(:disabled) { background-color: #273449; }
+html.dark-mode .modal-content          { background-color: #1e293b; }
+html.dark-mode .modal-content h3       { color: #f1f5f9; }
+html.dark-mode .modal-content p        { color: #94a3b8; }
+html.dark-mode .exam-taking-container .btn-secondary { background-color: #1e293b; color: #cbd5e1; border-color: #334155; }
+html.dark-mode .timer-warning-banner   { background-color: #7c2d12; color: #fed7aa; border-color: #c2410c; }
+
+/* ── ExamResults dark mode ────────────────────────────────────────────────── */
+html.dark-mode .exam-results-page      { background-color: #0f172a; }
+html.dark-mode .exam-results-container { background-color: #0f172a; }
+html.dark-mode .results-card           { background-color: #1e293b; }
+html.dark-mode .score-number           { color: #f1f5f9; }
+html.dark-mode .results-summary        { background-color: #273449; border-color: #334155; }
+html.dark-mode .summary-label          { color: #94a3b8; }
+html.dark-mode .summary-value          { color: #f1f5f9; }
+html.dark-mode .detailed-answers       { border-color: #334155; }
+html.dark-mode .detailed-answers h3    { color: #f1f5f9; }
+html.dark-mode .answer-review-card     { background-color: #273449; border-color: #334155; }
+html.dark-mode .review-number          { color: #94a3b8; }
+html.dark-mode .review-question        { color: #f1f5f9; }
+html.dark-mode .review-option          { background-color: #1e293b; border-color: #334155; }
+html.dark-mode .review-option .option-text   { color: #cbd5e1; }
+html.dark-mode .review-option .option-letter { background-color: #334155; color: #94a3b8; }
+html.dark-mode .explanation-box        { background-color: #172554; border-color: #3b82f6; color: #93c5fd; }
+html.dark-mode .explanation-box strong { color: #bfdbfe; }
+html.dark-mode .results-actions .btn-secondary { background-color: #273449; color: #cbd5e1; border-color: #334155; }
+
+/* ── AdminDashboard dark mode ─────────────────────────────────────────────── */
+html.dark-mode .admin-dashboard        { background-color: #0f172a; }
+html.dark-mode .admin-nav              { background-color: #1e293b; border-color: #334155; }
+html.dark-mode .admin-nav button       { color: #cbd5e1; }
+html.dark-mode .admin-nav button:hover { background-color: #273449; color: #f1f5f9; }
+html.dark-mode .admin-nav button.active { background-color: #667eea; color: white; }
+html.dark-mode .nav-breadcrumb         { color: #94a3b8; }
+html.dark-mode .admin-content          { background-color: #0f172a; color: #f1f5f9; }
+html.dark-mode .admin-content .loading { color: #94a3b8; }
+html.dark-mode .admin-dashboard .btn-secondary { background-color: #1e293b; color: #cbd5e1; border-color: #334155; }
+
+/* ExamList cards */
+html.dark-mode .exam-list-header h2    { color: #f1f5f9; }
+html.dark-mode .exam-card              { background-color: #1e293b; border-color: #334155; }
+html.dark-mode .exam-card-header h3   { color: #f1f5f9; }
+html.dark-mode .exam-description       { color: #94a3b8; }
+html.dark-mode .exam-meta              { background-color: #273449; }
+html.dark-mode .meta-item              { color: #94a3b8; }
+html.dark-mode .meta-item strong       { color: #cbd5e1; }
+
+/* ExamForm dark mode */
+html.dark-mode .exam-form              { background-color: #1e293b; }
+html.dark-mode .exam-form h2           { color: #f1f5f9; }
+html.dark-mode .exam-form .form-group label  { color: #cbd5e1; }
+html.dark-mode .exam-form .form-group input,
+html.dark-mode .exam-form .form-group textarea,
+html.dark-mode .exam-form .form-group select {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  caret-color: #f1f5f9;
+}
+html.dark-mode .exam-form .form-actions { border-color: #334155; }
+
+/* QuestionForm dark mode */
+html.dark-mode .question-form          { background-color: #1e293b; }
+html.dark-mode .question-form h2       { color: #f1f5f9; }
+html.dark-mode .question-form .form-group label,
+html.dark-mode .options-section > label { color: #cbd5e1; }
+html.dark-mode .question-form .form-group input,
+html.dark-mode .question-form .form-group textarea {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  caret-color: #f1f5f9;
+}
+html.dark-mode .option-input-group     { background-color: #273449; border-color: #334155; }
+html.dark-mode .option-input-group input[type="text"] {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+  caret-color: #f1f5f9;
+}
+html.dark-mode .option-label           { color: #94a3b8; }
+html.dark-mode .checkbox-label         { color: #cbd5e1; }
+html.dark-mode .hint                   { color: #64748b; }
+html.dark-mode .btn-add-option         { border-color: #475569; color: #a5b4fc; }
+html.dark-mode .btn-add-option:hover   { background-color: #1e293b; border-color: #667eea; }
+html.dark-mode .question-form .form-actions { border-color: #334155; }
+
+/* ExternalAPIFetch dark mode */
+html.dark-mode .external-api-fetch      { background-color: #1e293b; }
+html.dark-mode .external-api-fetch h2   { color: #f1f5f9; }
+html.dark-mode .fetch-description       { color: #94a3b8; }
+html.dark-mode .form-hint               { color: #64748b; }
+html.dark-mode .external-api-fetch .form-group label { color: #cbd5e1; }
+html.dark-mode .external-api-fetch .form-group input {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  caret-color: #f1f5f9;
+}
+html.dark-mode .api-info-box            { background-color: #172554; border-color: #1e40af; }
+html.dark-mode .api-info-box h4         { color: #93c5fd; }
+html.dark-mode .api-info-box ul         { color: #93c5fd; }
+html.dark-mode .api-info-box code       { color: #bfdbfe; }
+html.dark-mode .external-api-fetch .form-actions { border-color: #334155; }
+html.dark-mode .success-message         { background-color: #052e16; color: #86efac; border-color: #16a34a; }
+
+/* QuestionManager dark mode */
+html.dark-mode .question-manager            { background-color: #1e293b; }
+html.dark-mode .question-manager-header h2  { color: #f1f5f9; }
+html.dark-mode .exam-info                   { color: #94a3b8; }
+html.dark-mode .questions-count             { background-color: #273449; color: #cbd5e1; }
+html.dark-mode .question-card               { background-color: #273449; border-color: #334155; }
+html.dark-mode .question-text               { color: #f1f5f9; }
+html.dark-mode .question-points             { background-color: #1e293b; color: #94a3b8; }
+html.dark-mode .option                      { background-color: #1e293b; }
+html.dark-mode .option .option-label        { color: #64748b; }
+html.dark-mode .option .option-text         { color: #cbd5e1; }
+html.dark-mode .option.correct              { background-color: #052e16; border-color: #16a34a; }
+html.dark-mode .question-explanation        { background-color: #172554; border-color: #3b82f6; color: #93c5fd; }
+html.dark-mode .question-explanation strong { color: #bfdbfe; }
+html.dark-mode .question-actions            { border-color: #334155; }
+
+/* Confirm delete modal (used in ExamList + QuestionManager) */
+html.dark-mode .confirm-modal-overlay .confirm-modal { background-color: #1e293b; }
+html.dark-mode .confirm-modal h3            { color: #f1f5f9; }
+html.dark-mode .confirm-modal p             { color: #94a3b8; }
+
+/* ── Auth forms light-mode fix ────────────────────────────────────────────────
+   Auth pages use glass-morphism classes designed for dark backgrounds.
+   These overrides make them look correct on the default light background. */
+html:not(.dark-mode) .bg-white\/5     { background-color: #ffffff; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+html:not(.dark-mode) .border-white\/10 { border-color: #e2e8f0; }
+html:not(.dark-mode) .bg-black\/20    { background-color: #f8fafc; }
+html:not(.dark-mode) .border-white\/20 { border-color: #cbd5e1; }
+html:not(.dark-mode) .text-white\/80  { color: #374151; }
+html:not(.dark-mode) .placeholder\:text-white\/35::placeholder { color: #94a3b8; }
+html:not(.dark-mode) .text-\[\#888\]  { color: #6b7280; }
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -96,34 +382,23 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
+/* Global button reset — each component controls its own appearance.
+   Must be in @layer base so Tailwind utility classes (bg-indigo-600 etc.)
+   can override it — unlayered CSS beats @layer utilities in the cascade. */
+@layer base {
   button {
-    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: transparent;
+    cursor: pointer;
+    transition: border-color 0.25s;
+  }
+  button:focus,
+  button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
   }
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { adminQuestionApi, type Question, type Exam } from '../../api/client';
 import { QuestionForm } from './QuestionForm';
 import '../../styles/QuestionManager.css';
+import '../../styles/AdminDashboard.css';
 
 interface QuestionManagerProps {
   exam: Exam;
@@ -14,6 +15,8 @@ export function QuestionManager({ exam, onClose }: QuestionManagerProps) {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [deleteQuestionId, setDeleteQuestionId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadQuestions = useCallback(async () => {
     try {
@@ -43,17 +46,19 @@ export function QuestionManager({ exam, onClose }: QuestionManagerProps) {
     setShowForm(true);
   };
 
-  const handleDelete = async (questionId: string) => {
-    if (!confirm('Are you sure you want to delete this question?')) {
-      return;
-    }
-
+  const confirmDeleteQuestion = async () => {
+    if (!deleteQuestionId) return;
+    setDeleting(true);
     try {
-      await adminQuestionApi.delete(questionId);
-      setQuestions(questions.filter(q => q._id !== questionId));
+      await adminQuestionApi.delete(deleteQuestionId);
+      setQuestions((prev) => prev.filter((q) => q._id !== deleteQuestionId));
+      setDeleteQuestionId(null);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete question');
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Failed to delete question');
+      setDeleteQuestionId(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -148,15 +153,40 @@ export function QuestionManager({ exam, onClose }: QuestionManagerProps) {
                 >
                   Edit
                 </button>
-                <button 
+                <button
                   className="btn-danger"
-                  onClick={() => handleDelete(question._id)}
+                  onClick={() => setDeleteQuestionId(question._id)}
                 >
                   Delete
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {deleteQuestionId && (
+        <div className="confirm-modal-overlay" onClick={() => setDeleteQuestionId(null)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Question?</h3>
+            <p>Are you sure you want to permanently delete this question? This cannot be undone.</p>
+            <div className="confirm-modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setDeleteQuestionId(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-danger"
+                onClick={confirmDeleteQuestion}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete Question'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

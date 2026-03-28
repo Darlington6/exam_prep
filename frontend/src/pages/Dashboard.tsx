@@ -1,16 +1,7 @@
-import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Footer } from '../components/Footer';
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { Navbar } from '../components/Navbar';
 
 const features = [
   { icon: '📚', title: 'Multiple categories', desc: 'Access exams across Science, Humanities, Languages, and more.' },
@@ -20,113 +11,16 @@ const features = [
 ];
 
 export function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleGetStarted = () => {
-    navigate('/exams/categories');
-  };
-
-  const handleBrowse = () => {
-    navigate('/exams/categories');
-  };
-
-  const handleAdminDashboard = () => {
-    navigate('/admin');
-  };
-
-  // Close menu when clicking outside
-  const handleMenuBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    if (!menuRef.current?.contains(e.relatedTarget as Node)) {
-      setMenuOpen(false);
-    }
-  };
+  const handleGetStarted = () => navigate('/exams/categories');
+  const handleBrowse = () => navigate('/exams/categories');
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-sans">
+    <div className="dashboard-page min-h-screen flex flex-col bg-white font-sans">
 
-      {/* ── Navbar ── */}
-      <nav className="bg-white border-b border-slate-200 px-10 h-16 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-              <circle cx="4" cy="4" r="2" />
-              <circle cx="12" cy="4" r="2" />
-              <circle cx="4" cy="12" r="2" />
-              <circle cx="12" cy="12" r="2" />
-            </svg>
-          </div>
-          <span className="text-base font-bold text-indigo-950 tracking-tight">Exam Prep</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {user?.role === 'admin' && (
-            <button
-              onClick={handleAdminDashboard}
-              className="text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-1.5 rounded-lg border-none cursor-pointer transition-colors"
-            >
-              Admin Dashboard
-            </button>
-          )}
-
-          {/* ── Avatar dropdown ── */}
-          <div className="relative" ref={menuRef} onBlur={handleMenuBlur} tabIndex={-1}>
-            <button
-              className="w-8 h-8 rounded-full bg-indigo-50 border-2 border-indigo-200 flex items-center justify-center text-xs font-bold text-indigo-600 cursor-pointer"
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Open user menu"
-              aria-expanded={menuOpen}
-            >
-              {(user as { avatar?: string } & typeof user)?.avatar ? (
-                <img
-                  src={(user as { avatar?: string } & typeof user).avatar}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                getInitials(user?.name || '?')
-              )}
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-10 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                <div className="px-4 py-3 border-b border-slate-100">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                </div>
-                <button
-                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                  onMouseDown={() => { setMenuOpen(false); navigate('/profile'); }}
-                >
-                  👤 My Profile
-                </button>
-                <button
-                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                  onMouseDown={() => { setMenuOpen(false); navigate('/profile?tab=settings'); }}
-                >
-                  ⚙️ Settings
-                </button>
-                <div className="border-t border-slate-100" />
-                <button
-                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  onMouseDown={() => { setMenuOpen(false); logout(); }}
-                >
-                  🚪 Logout
-                </button>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={logout}
-            className="text-sm font-medium text-slate-500 bg-white hover:bg-slate-50 border border-slate-200 px-4 py-1.5 rounded-lg cursor-pointer transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="flex-1">
 
@@ -169,9 +63,9 @@ export function Dashboard() {
           <div className="flex justify-center flex-wrap gap-0 max-w-3xl mx-auto">
             {[
               { num: '500+', label: 'Practice exams' },
-              { num: '40k', label: 'Students' },
-              { num: '94%', label: 'Pass rate' },
-              { num: '12', label: 'Subject areas' },
+              { num: '40k',  label: 'Students' },
+              { num: '94%',  label: 'Pass rate' },
+              { num: '12',   label: 'Subject areas' },
             ].map((stat, i) => (
               <div key={i} className={`text-center px-12 ${i > 0 ? 'border-l border-slate-200' : ''}`}>
                 <div className="text-3xl font-extrabold text-indigo-950 tracking-tight">{stat.num}</div>
@@ -214,8 +108,8 @@ export function Dashboard() {
           <div className="flex max-w-3xl mx-auto relative">
             {[
               { n: 1, title: 'Choose a category', desc: 'Browse subjects and pick the one you want to practise' },
-              { n: 2, title: 'Take the exam', desc: 'Answer questions under timed conditions, just like the real thing' },
-              { n: 3, title: 'Review results', desc: 'See correct answers, explanations, and your score breakdown' },
+              { n: 2, title: 'Take the exam',     desc: 'Answer questions under timed conditions, just like the real thing' },
+              { n: 3, title: 'Review results',    desc: 'See correct answers, explanations, and your score breakdown' },
             ].map((step, i) => (
               <div key={step.n} className="flex-1 text-center px-5 relative">
                 {i < 2 && <div className="absolute top-5 left-1/2 right-0 h-px bg-indigo-200" style={{ zIndex: 0 }} />}

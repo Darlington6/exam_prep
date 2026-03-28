@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { adminExamApi, type Exam } from '../../api/client';
 import { QuestionManager } from './QuestionManager';
 import '../../styles/ExamList.css';
+import '../../styles/AdminDashboard.css';
 
 interface ExamListProps {
   onEdit: (examId: string) => void;
@@ -15,6 +16,8 @@ export function ExamList({ onEdit, onCreate, managingExamId, onManageQuestions, 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadExams = useCallback(async () => {
     try {
@@ -34,17 +37,19 @@ export function ExamList({ onEdit, onCreate, managingExamId, onManageQuestions, 
     loadExams();
   }, [loadExams]);
 
-  const handleDelete = async (examId: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"? This will also delete all associated questions.`)) {
-      return;
-    }
-
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await adminExamApi.delete(examId);
-      setExams(exams.filter(e => e._id !== examId));
+      await adminExamApi.delete(deleteTarget.id);
+      setExams((prev) => prev.filter((e) => e._id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete exam');
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Failed to delete exam');
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -145,15 +150,42 @@ export function ExamList({ onEdit, onCreate, managingExamId, onManageQuestions, 
                 >
                   {exam.isActive ? 'Deactivate' : 'Activate'}
                 </button>
-                <button 
+                <button
                   className="btn-danger"
-                  onClick={() => handleDelete(exam._id, exam.title)}
+                  onClick={() => setDeleteTarget({ id: exam._id, title: exam.title })}
                 >
                   Delete
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {deleteTarget && (
+        <div className="confirm-modal-overlay" onClick={() => setDeleteTarget(null)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Exam?</h3>
+            <p>
+              Are you sure you want to permanently delete <strong>"{deleteTarget.title}"</strong>?
+              This will also delete all associated questions and cannot be undone.
+            </p>
+            <div className="confirm-modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-danger"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete Exam'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

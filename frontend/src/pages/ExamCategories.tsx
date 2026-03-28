@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { categoriesApi, type Category } from '../api/client';
 import { Footer } from '../components/Footer';
+import { Navbar } from '../components/Navbar';
 import type { SortOption } from '../components/categories/SortDropdown';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -145,8 +145,6 @@ function mergeCategories(apiCategories: Category[]): DisplayCategory[] {
 
 export function ExamCategories() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
   const [categories, setCategories] = useState<DisplayCategory[]>(PREDEFINED);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -207,41 +205,11 @@ export function ExamCategories() {
   const noResultsAtAll = filteredActiveCategories.length === 0 && filteredEmptyCategories.length === 0;
 
   const handleCategoryClick = (categoryId: string) => navigate(`/exams/category/${categoryId}`);
-  const handleBack = () => navigate('/dashboard');
 
   return (
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col">
 
-      {/* ── Sticky navbar ── */}
-      <nav className="bg-white border-b border-slate-200 px-8 h-16 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900 px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors"
-          >
-            ← Back
-          </button>
-          <div className="w-px h-5 bg-slate-200" />
-          <span className="text-base font-semibold text-slate-900">Browse Categories</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {user?.role === 'admin' && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
-            >
-              Admin Dashboard
-            </button>
-          )}
-          <button
-            onClick={logout}
-            className="text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900 px-3 py-1.5 rounded-md transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      <Navbar backTo="/dashboard" backLabel="Dashboard" title="Browse Categories" />
 
       {/* ── Page content ── */}
       <div className="max-w-6xl mx-auto px-8">
