@@ -161,6 +161,11 @@ graph TB
    MONGO_URI=mongodb://mongo:27017/exam_prep_db
    JWT_SECRET=your-super-secret-key-change-in-production
    JWT_EXPIRES_IN=7d
+
+   # Optional — leave blank to use Ethereal (console preview) for password reset emails
+   EMAIL_FROM=
+   GMAIL_APP_PASSWORD=
+   FRONTEND_URL=http://localhost:5173
    ```
 
    > **Note:** When running with Docker Compose the MongoDB host must be `mongo` (the service name), not `localhost`.
@@ -217,6 +222,11 @@ graph TB
    MONGO_URI=mongodb://localhost:27017/exam_prep_db
    JWT_SECRET=your-super-secret-key-change-in-production
    JWT_EXPIRES_IN=7d
+
+   # Optional — leave blank to use Ethereal (console preview) for password reset emails
+   EMAIL_FROM=
+   GMAIL_APP_PASSWORD=
+   FRONTEND_URL=http://localhost:5173
    ```
 
 3. **Frontend**
@@ -272,7 +282,7 @@ graph TB
 
 ### Backend Tests
 
-The backend has **40 test cases** across three test suites using Jest and an in-memory MongoDB instance (no external database required):
+The backend has **40 test cases** across four test suites using Jest and an in-memory MongoDB instance (no external database required):
 
 ```bash
 cd backend
@@ -284,6 +294,7 @@ npm test
 | Auth routes  | 11    | Register, login, token validation                  |
 | Exam routes  | 15    | Browse, take exams, auto-grading, attempts         |
 | Admin routes | 13    | CRUD exams/questions, authorization, toggle active |
+| Sample       | 1     | Sanity check                                       |
 
 ### Frontend Lint
 
@@ -416,6 +427,21 @@ All checks must pass before a pull request can be merged to `main`.
 | POST   | `/:examId/submit`     | Submit answers and get graded  | Yes  |
 | GET    | `/attempts`           | Get current user's attempts    | Yes  |
 
+### User Profile (`/api/user`) — requires auth
+
+| Method | Endpoint        | Description                              |
+| ------ | --------------- | ---------------------------------------- |
+| GET    | `/profile`      | Get current user's profile               |
+| PUT    | `/profile`      | Update username and avatar               |
+| GET    | `/exam-history` | Get current user's full attempt history  |
+| PUT    | `/settings`     | Update notification preferences          |
+
+### Categories (`/api/categories`) — requires auth
+
+| Method | Endpoint | Description                                           |
+| ------ | -------- | ----------------------------------------------------- |
+| GET    | `/`      | List all distinct categories derived from active exams |
+
 ### Admin (`/api/admin`) — requires admin role
 
 | Method | Endpoint                   | Description                         |
@@ -468,7 +494,8 @@ exam_prep/
 │   ├── __tests__/                      # 40 test cases (Jest + MongoMemoryServer)
 │   ├── middleware/                     # JWT auth + admin role middleware
 │   ├── models/                         # Mongoose schemas (User, Exam, Question, Attempt)
-│   ├── routes/                         # auth, exams, admin routes
+│   ├── routes/                         # auth, exams, admin, user, categories routes
+│   ├── utils/emailService.js           # Gmail SMTP email delivery (Ethereal fallback)
 │   └── scripts/make-admin.js           # CLI: promote user to admin
 │
 ├── frontend/                           # React 19 + TypeScript
@@ -494,7 +521,7 @@ exam_prep/
 - Azure CLI (`az`) installed and authenticated
 - Ansible (`pip install ansible`) for local testing
 - Docker ≥ 20.10 and Docker Compose ≥ 2.0
-- An SSH key pair (`ssh-keygen -t ed25519`)
+- An SSH key pair — **must be RSA** (`ssh-keygen -t rsa -b 4096`) — Azure Linux VMs do not accept ed25519 keys
 
 ### Deploying to Production
 
