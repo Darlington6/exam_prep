@@ -39,6 +39,8 @@
   font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.2s;
+  background-color: #ffffff;
+  color: #1e293b;
 }
 
 .form-group input:focus,

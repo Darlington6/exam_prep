@@ -49,13 +49,15 @@ Schools and training centers
 - **Password Reset**: Email-based password reset flow via Gmail SMTP — users receive a time-limited reset link
 
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
-- **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions
+- **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions. The exam timer auto-submits when time runs out, with three countdown warnings (5 min, 2 min, 1 min) before expiry
 - **Instant Results and Feedback**: Immediate scoring with correct answers and detailed explanations after submission
 - **Performance Tracking**: View previous attempts and monitor improvement over time through personalized dashboards
 - **Admin Dashboard**: Administrators can create and manage exams, add questions manually or fetch from external platforms via API integration
 - **API Integration**: Fetch exam questions and content from external educational platforms and APIs to expand the question bank
 - **Protected Routes**: Role-based access control for students and administrators
 - **Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
+- **Dark / Light Mode**: User-controlled theme toggle, persisted in browser storage and applied globally across all pages
+- **User Profile & Avatar**: Customisable display name and profile picture (base64 upload, up to 1 MB), with avatar shown in the navigation bar
 
 ## Architecture
 
@@ -440,7 +442,7 @@ All checks must pass before a pull request can be merged to `main`.
 
 | Method | Endpoint | Description                                           |
 | ------ | -------- | ----------------------------------------------------- |
-| GET    | `/`      | List all distinct categories derived from active exams |
+| GET    | `/`      | List all distinct categories from all exams; `count` reflects active exams only |
 
 ### Admin (`/api/admin`) — requires admin role
 

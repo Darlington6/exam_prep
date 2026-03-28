@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { ExamList } from '../components/admin/ExamList';
 import { ExamForm } from '../components/admin/ExamForm';
 import { ExternalAPIFetch } from '../components/admin/ExternalAPIFetch';
+import { Navbar } from '../components/Navbar';
 import '../styles/AdminDashboard.css';
 
 type TabView = 'exams' | 'create-exam' | 'fetch-api';
 
 export function AdminDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabView>('exams');
   const [editingExamId, setEditingExamId] = useState<string | null>(null);
   const [managingExamId, setManagingExamId] = useState<string | null>(null);
@@ -58,12 +58,8 @@ export function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
+      <Navbar backTo="/dashboard" backLabel="Dashboard" />
       <header className="admin-header">
-        <div className="admin-header-top">
-          <button className="btn-back-admin" onClick={() => navigate('/dashboard')}>
-            ← Back to Dashboard
-          </button>
-        </div>
         <h1>Admin Dashboard</h1>
         <p>Manage exams and questions</p>
       </header>

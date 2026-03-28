@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userApi, type ExamHistoryEntry, type User } from '../api/client';
+import { Navbar } from '../components/Navbar';
 import '../styles/Profile.css';
 
 // ── Mini SVG line chart for score progression ─────────────────────────────────
@@ -93,7 +94,7 @@ function getInitials(name: string) {
 
 // ── Main Profile page ─────────────────────────────────────────────────────────
 export function Profile() {
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -204,6 +205,7 @@ export function Profile() {
         avatar: editAvatarPreview,
       });
       setProfile(data.user);
+      updateUser({ avatar: editAvatarPreview, username: trimmed });
       setProfileSuccess('Profile updated successfully!');
       setEditMode(false);
     } catch (err: unknown) {
@@ -259,16 +261,7 @@ export function Profile() {
 
   return (
     <div className="profile-page">
-      {/* ── Top nav ── */}
-      <header className="profile-header">
-        <div className="profile-header-content">
-          <button className="btn-back" onClick={() => navigate('/dashboard')}>
-            ← Dashboard
-          </button>
-          <h1 className="profile-header-title">My Profile</h1>
-          <button className="btn-logout-sm" onClick={logout}>Logout</button>
-        </div>
-      </header>
+      <Navbar backTo="/dashboard" backLabel="Dashboard" title="My Profile" />
 
       <div className="profile-body">
         {/* ── Sidebar avatar + tabs ── */}
@@ -675,6 +668,7 @@ export function Profile() {
           )}
         </main>
       </div>
+
     </div>
   );
 }

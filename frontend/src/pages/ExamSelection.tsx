@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { examApi, type Exam } from '../api/client';
 import { Footer } from '../components/Footer';
+import { Navbar } from '../components/Navbar';
 import '../styles/ExamSelection.css';
 
 const categoryNames: Record<string, string> = {
@@ -24,7 +24,6 @@ const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'] as const;
 export function ExamSelection() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,32 +62,11 @@ export function ExamSelection() {
     navigate(`/exam/${examId}`);
   };
 
-  const handleBack = () => {
-    navigate('/exams/categories');
-  };
+  const categoryTitle = categoryNames[categoryId || ''] || (categoryId ? formatCategoryName(categoryId) : 'Exams');
 
   return (
     <div className="exam-selection-container">
-      <header className="selection-header">
-        <div className="header-content">
-          <div className="header-left">
-            <button className="btn-back" onClick={handleBack}>
-              ← Back to Categories
-            </button>
-            <h1>{categoryNames[categoryId || ''] || (categoryId ? formatCategoryName(categoryId) : 'Exams')}</h1>
-          </div>
-          <div className="header-actions">
-            {user?.role === 'admin' && (
-              <button className="btn-admin" onClick={() => navigate('/admin')}>
-                Admin Dashboard
-              </button>
-            )}
-            <button className="btn-logout" onClick={logout}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar backTo="/exams/categories" backLabel="Categories" title={categoryTitle} />
 
       <main className="selection-main">
         {loading ? (
