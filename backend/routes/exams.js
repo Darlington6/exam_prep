@@ -16,7 +16,7 @@ router.get('/category/:category', auth, async (req, res) => {
     const exams = await Exam.find({
       category: { $regex: new RegExp(`^${escaped}$`, 'i') },
       isActive: true,
-    }).sort({ createdAt: -1 });
+    }).sort({ _id: -1 });
     res.json({ exams });
   } catch (err) {
     console.error('Get exams by category error:', err.message);
@@ -28,7 +28,7 @@ router.get('/category/:category', auth, async (req, res) => {
 router.get('/attempts', auth, async (req, res) => {
   try {
     const attempts = await ExamAttempt.find({ userId: req.user._id })
-      .sort({ completedAt: -1 });
+      .sort({ _id: -1 });
     res.json({ attempts });
   } catch (err) {
     console.error('Get attempts error:', err.message);
@@ -66,7 +66,7 @@ router.get('/:id/review', auth, async (req, res) => {
     }
 
     const questions = await Question.find({ examId: req.params.id })
-      .sort({ order: 1, createdAt: 1 });
+      .sort({ order: 1 });
 
     res.json({ questions });
   } catch (err) {
@@ -83,7 +83,7 @@ router.get('/:id/questions', auth, async (req, res) => {
     if (!exam) return res.status(404).json({ message: 'Exam not found.' });
 
     const questions = await Question.find({ examId: req.params.id })
-      .sort({ order: 1, createdAt: 1 });
+      .sort({ order: 1 });
 
     // Strip isCorrect and explanation from each question for security
     const sanitized = questions.map(q => {

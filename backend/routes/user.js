@@ -62,7 +62,7 @@ router.put('/profile', async (req, res) => {
 router.get('/exam-history', async (req, res) => {
   try {
     const attempts = await ExamAttempt.find({ userId: req.user._id })
-      .sort({ completedAt: -1 })
+      .sort({ _id: -1 })
       .lean();
 
     // Populate exam titles by fetching unique exam IDs
