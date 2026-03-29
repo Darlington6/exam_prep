@@ -10,8 +10,8 @@ COPY . .
 
 # Accept the API URL at build time so Vite can embed it into the static bundle.
 # Default is empty string: the frontend uses relative /api/* URLs and nginx
-# proxies them to the backend container — no hardcoded IP needed.
-# Override only if you are NOT using the nginx reverse-proxy (e.g. a split-host setup).
+# proxies them to the backend container.
+# Override only if NOT using the nginx reverse-proxy.
 ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 
