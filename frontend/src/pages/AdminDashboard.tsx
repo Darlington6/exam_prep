@@ -60,7 +60,7 @@ export function AdminDashboard() {
     <div className="admin-dashboard">
       <Navbar backTo="/dashboard" backLabel="Dashboard" />
       <header className="admin-header">
-        <h1>Admin Dashboard</h1>
+        <h1>Dashboard</h1>
         <p>Manage exams and questions</p>
       </header>
 
