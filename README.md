@@ -1,6 +1,53 @@
 # Exam Prep
 
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4.2-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express)](https://expressjs.com/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-9.2-880000?logo=mongodb)](https://mongoosejs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6-47A248?logo=mongodb)](https://www.mongodb.com/)
+[![Jest](https://img.shields.io/badge/Jest-30-C21325?logo=jest)](https://jestjs.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Azure](https://img.shields.io/badge/Azure-CosmosDB%20%7C%20ACR%20%7C%20VMs-0078D4?logo=microsoftazure)](https://azure.microsoft.com/)
+[![Terraform](https://img.shields.io/badge/Terraform-Azure_Provider-7B42BC?logo=terraform)](https://www.terraform.io/)
+
 > A web-based platform helping African students excel in their examinations through interactive practice and instant feedback
+
+---
+
+## Table of Contents
+
+- [Live Application](#live-application)
+- [African Context](#african-context)
+- [Team Members](#team-members)
+- [Project Overview](#project-overview)
+  - [Target Users](#target-users)
+  - [Core Features](#core-features)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Quick Start with Docker Compose](#quick-start-with-docker-compose-recommended)
+  - [Manual Installation](#manual-installation-alternative)
+  - [Creating an Admin User](#creating-an-admin-user)
+- [Running Tests](#running-tests)
+- [Dockerization](#dockerization)
+- [CI/CD Pipeline](#cicd-pipeline)
+  - [CI Pipeline](#ci-pipeline-githubworkflowsciyml)
+  - [Terraform Pipeline](#terraform-pipeline-githubworkflowsterraformyml)
+  - [CD Pipeline](#cd-pipeline-githubworkflowscdyml)
+  - [Required GitHub Secrets](#required-github-secrets)
+- [API Endpoints](#api-endpoints)
+- [Repository Structure](#repository-structure)
+- [Setup Instructions](#setup-instructions)
+- [Security Measures](#security-measures)
+- [Challenges & Solutions](#challenges--solutions)
+- [Video Demo](#video-demo)
+- [License](#license)
+
+---
 
 ## Live Application
 
@@ -51,9 +98,10 @@ Schools and training centers
 - **Practice Exams**: Users can choose from various exam categories and answer multiple-choice questions for any type of exam
 - **Timed Practice Sessions**: Test yourself within specific time limits to simulate real exam conditions. The exam timer auto-submits when time runs out, with three countdown warnings (5 min, 2 min, 1 min) before expiry
 - **Instant Results and Feedback**: Immediate scoring with correct answers and detailed explanations after submission
+- **Answer Review**: After submission, users can review every question alongside the correct answer and explanation
 - **Performance Tracking**: View previous attempts and monitor improvement over time through personalized dashboards
 - **Admin Dashboard**: Administrators can create and manage exams, add questions manually or fetch from external platforms via API integration
-- **API Integration**: Fetch exam questions and content from external educational platforms and APIs to expand the question bank
+- **API Integration**: Fetch exam questions and content from external educational platforms (Open Trivia DB, QuizAPI, custom JSON) to expand the question bank
 - **Protected Routes**: Role-based access control for students and administrators
 - **Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
 - **Dark / Light Mode**: User-controlled theme toggle, persisted in browser storage and applied globally across all pages
@@ -63,7 +111,7 @@ Schools and training centers
 
 ![Architecture Diagram](assets/architecture-diagram.png)
 
-**OR**
+Also see the Mermaid diagram below for a text-based representation of the same architecture.
 
 ```mermaid
 graph TB
@@ -115,16 +163,18 @@ graph TB
 
 | Layer           | Technology                                                        |
 | --------------- | ----------------------------------------------------------------- |
-| **Frontend**    | React 19, TypeScript, Vite 7, React Router 7, Axios               |
-| **Backend**     | Node.js 24, Express 4, Mongoose 9                                 |
+| **Frontend**    | React 19, TypeScript 5.9, Vite 7, React Router 7, Axios 1.13, Tailwind CSS 4.2 |
+| **Backend**     | Node.js 24, Express 4.21, Mongoose 9.2                           |
 | **Database**    | MongoDB 6 (local dev) / Azure CosmosDB — MongoDB API (production) |
-| **Auth**        | JWT (jsonwebtoken), bcryptjs, role-based access (student / admin) |
-| **Testing**     | Jest 30, Supertest, MongoMemoryServer                             |
+| **Auth**        | JWT (jsonwebtoken 9), bcryptjs 3, role-based access (student / admin) |
+| **Email**       | Nodemailer 8 via Gmail SMTP (Ethereal fallback for dev)          |
+| **Testing**     | Jest 30, Supertest 7, MongoMemoryServer 11                        |
 | **DevOps**      | Docker, Docker Compose, GitHub Actions CI/CD, Ansible             |
 | **IaC**         | Terraform (Azure provider) — VNet, VMs, ACR, CosmosDB             |
 | **Cloud**       | Azure (South Africa North) — VNet, Bastion, App VM, ACR, CosmosDB |
+| **DNS / TLS**   | DuckDNS (`examprep-app.duckdns.org`), Let's Encrypt via certbot  |
 | **Security**    | Trivy (container scan), tfsec (IaC scan), NSG rules               |
-| **Linting**     | ESLint 9, typescript-eslint                                       |
+| **Linting**     | ESLint 9, typescript-eslint 8                                     |
 
 ## Getting Started
 
@@ -325,6 +375,7 @@ npm run lint
 - **Multi-stage build:**
   - _Stage 1 (builder):_ `node:24-alpine` — installs dependencies, runs `npm run build`
   - _Stage 2 (production):_ `nginx:alpine` — serves the built static files
+- Accepts `VITE_API_URL` build arg (defaults to empty string for relative `/api` paths in production)
 - Exposes port **80**
 
 ### Docker Compose (`docker-compose.yml`)
@@ -406,7 +457,7 @@ All checks must pass before a pull request can be merged to `main`.
 | `DUCKDNS_TOKEN` | DuckDNS dashboard → your token |
 | `DUCKDNS_DOMAIN` | `examprep-app` (subdomain only, without `.duckdns.org`) |
 | `SENDGRID_API_KEY` | SendGrid/Twilio dashboard → API Keys (kept for reference) |
-| `EMAIL_FROM` | Gmail address to send from (e.g. `desmondtunyinko6@gmail.com`) |
+| `EMAIL_FROM` | Gmail address to send from (e.g. `yourexample@gmail.com`) |
 | `GMAIL_APP_PASSWORD` | Google Account → Security → App Passwords |
 
 ---
@@ -419,19 +470,20 @@ All checks must pass before a pull request can be merged to `main`.
 | ------ | ------------------ | ------------------------------------ | ---- |
 | POST   | `/register`        | Create a new account                 | No   |
 | POST   | `/login`           | Login and receive JWT                | No   |
-| GET    | `/me`              | Get current user profile             | Yes  |
+| GET    | `/profile`              | Get current user profile             | Yes  |
 | POST   | `/forgot-password` | Send password reset link via email   | No   |
 | POST   | `/reset-password`  | Reset password using token from link | No   |
 
 ### Student Exams (`/api/exams`)
 
-| Method | Endpoint              | Description                    | Auth |
-| ------ | --------------------- | ------------------------------ | ---- |
-| GET    | `/category/:category` | List active exams by category  | Yes  |
-| GET    | `/:id`                | Get a single exam              | Yes  |
-| GET    | `/:examId/questions`  | Get questions (answers hidden) | Yes  |
-| POST   | `/:examId/submit`     | Submit answers and get graded  | Yes  |
-| GET    | `/attempts`           | Get current user's attempts    | Yes  |
+| Method | Endpoint              | Description                                         | Auth |
+| ------ | --------------------- | --------------------------------------------------- | ---- |
+| GET    | `/category/:category` | List active exams by category                       | Yes  |
+| GET    | `/:id`                | Get a single exam                                   | Yes  |
+| GET    | `/:id/questions`      | Get questions (answers hidden)                      | Yes  |
+| GET    | `/:id/review`         | Get questions with correct answers (post-attempt)   | Yes  |
+| POST   | `/:id/submit`         | Submit answers and get graded                       | Yes  |
+| GET    | `/attempts`           | Get current user's attempts                         | Yes  |
 
 ### User Profile (`/api/user`) — requires auth
 
@@ -463,7 +515,7 @@ All checks must pass before a pull request can be merged to `main`.
 | POST   | `/questions`               | Create a question                   |
 | PUT    | `/questions/:id`           | Update a question                   |
 | DELETE | `/questions/:id`           | Delete a question                   |
-| POST   | `/external/fetch`          | Fetch exams from external API       |
+| POST   | `/external/fetch`          | Fetch exams from external API (Open Trivia DB, QuizAPI, custom JSON) |
 
 ---
 
@@ -506,14 +558,23 @@ exam_prep/
 │
 ├── frontend/                           # React 19 + TypeScript
 │   ├── Dockerfile                      # Multi-stage: Node builder → Nginx (with VITE_API_URL ARG)
-│   ├── nginx.conf                      # SPA routing + static asset caching
+│   ├── nginx.conf                      # SPA routing + /api reverse-proxy + static asset caching
 │   ├── .dockerignore
 │   ├── .env.example                    # Environment variables template
-│   └── src/                            # Pages, components, context, API client
+│   └── src/
+│       ├── api/client.ts               # Axios client + all API functions
+│       ├── components/                 # Navbar, ProtectedRoute, admin/*, categories/*, home/*
+│       ├── contexts/AuthContext.tsx    # Global auth state (login, logout, updateUser)
+│       ├── pages/                      # 12 page components (Dashboard, ExamTaking, etc.)
+│       └── styles/                     # Component-scoped CSS files
+│
+├── assets/                             # Documentation assets
+│   └── architecture-diagram.png       # Architecture diagram image
 │
 ├── docker-compose.yml                  # Local dev: backend + frontend + MongoDB
 ├── docker-compose.prod.yml             # Production: backend + frontend (no mongo, ACR images)
 ├── .gitignore
+├── .trivyignore                        # Accepted CVEs with justifications
 ├── LICENSE
 └── README.md
 ```
@@ -613,6 +674,7 @@ All Terraform code is scanned by `tfsec` on every pull request. Misconfiguration
 - The **App VM has no public IP**. It is only reachable via the bastion host.
 - **NSG rules** restrict SSH and app traffic to the bastion subnet only (10.0.1.0/24).
 - The **bastion** is the only public entry point and only serves HTTP traffic via nginx.
+- **CosmosDB** is network-restricted to the private subnet via Azure VNet service endpoint rules.
 
 ### Secret Management
 All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credentials) are stored as **GitHub Secrets** and injected at runtime. No secrets are committed to the repository.
@@ -622,6 +684,8 @@ All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credenti
 - All authenticated routes require a valid **JWT token**.
 - Admin routes enforce **role-based access control**.
 - Docker containers run as **non-root users**.
+- Password reset tokens are stored as SHA-256 hashes and expire after 1 hour.
+- SSRF protection on the external API fetch endpoint blocks requests to private/loopback addresses.
 
 ---
 
@@ -633,6 +697,7 @@ All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credenti
 | **Ubuntu 22.04 wrong Azure image offer** | The `UbuntuServer` offer only supports up to Ubuntu 18.04. Ubuntu 22.04 requires the `0001-com-ubuntu-server-jammy` offer — a non-obvious Azure naming convention not clearly documented. |
 | **Azure does not support ed25519 SSH keys** | Azure Linux VMs only accept RSA SSH keys. Had to regenerate key pair with `ssh-keygen -t rsa -b 4096` and update Terraform Cloud and GitHub Secrets. |
 | **CosmosDB network restriction** | Needed the database to be inaccessible from the public internet. Used Azure VNet service endpoint rules to restrict CosmosDB access to the private subnet only, rather than a full private endpoint (which requires Premium tier). |
+| **CosmosDB sort compatibility** | Azure CosmosDB (RU-based) only creates range indexes on `_id` by default. All other fields use hash indexes which do not support `$orderby`. Fixed by replacing all `sort({ createdAt })`, `sort({ completedAt })`, and `sort({ order })` calls with `sort({ _id })` — ObjectIDs embed a timestamp so ordering is preserved. |
 | **`docker-compose-plugin` not in Ubuntu default repos** | The Docker Compose v2 plugin requires the official Docker apt repository. Added GPG key and Docker apt source to Ansible before installing the package. |
 | **Frontend nginx crash-looping in container** | Running nginx with a custom non-root user caused `Permission denied` on `/var/cache/nginx/`. The `nginx:alpine` image's built-in `nginx` user already has correct permissions — removed the custom user from the Dockerfile. |
 | **Trivy scanning base-image CVEs we cannot fix** | Trivy flagged HIGH CVEs in `node:24-alpine`'s bundled npm internals (zlib, minimatch, tar). Since these are upstream issues outside our control, documented and accepted them in `.trivyignore` with justifications. |
@@ -645,7 +710,7 @@ All credentials (Azure, SSH keys, JWT secret, DB connection string, ACR credenti
 
 ## Video Demo
 
-_To be added after deployment._
+[Watch Demo Video](https://drive.google.com/drive/folders/1JEoFMrXe5Zx4vwKg80mv7ZhtekE7NAoZ?usp=drive_link)
 
 ---
 
