@@ -10,3 +10,10 @@
 # DevOps
 /.github/ @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
 /docker-compose.yml @Uchantal @Darlington6 @Nmesoma-solomon-peter @sharangabo
+/docker-compose.prod.yml @Darlington6
+
+# Terraform / IaC
+/terraform/ @Nmesoma-solomon-peter @Darlington6
+
+# Ansible
+/ansible/ @Darlington6
