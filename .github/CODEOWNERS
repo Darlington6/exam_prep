@@ -13,7 +13,7 @@
 /docker-compose.prod.yml @Darlington6
 
 # Terraform / IaC
-/terraform/ @Nmesoma-solomon-peter @Darlington6
+/terraform/ @Nmesoma-solomon-peter @Darlington6 @UChantal
 
 # Ansible
-/ansible/ @Darlington6
+/ansible/ @Darlington6 @Nmesoma-solomon-peter
