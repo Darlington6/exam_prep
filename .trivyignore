@@ -21,3 +21,13 @@ CVE-2026-27904
 CVE-2026-26960
 CVE-2026-29786
 CVE-2026-31802
+
+# path-to-regexp ReDoS CVE bundled inside Express 4.x internals.
+# Fix is in 0.1.13 but Express 4.x ships 0.1.12 and has not yet released
+# a patched version. Remove once Express releases a patch or we upgrade to Express 5.x.
+CVE-2026-4867
+
+# picomatch ReDoS CVE in npm's own bundled internal packages.
+# Same situation as minimatch above — bundled inside the Node.js Docker image,
+# not in our application code. Remove once node:24-alpine ships patched npm.
+CVE-2026-33671
